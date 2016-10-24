@@ -44,7 +44,7 @@
                 :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/compiled/onyx_tutorial.js"
                            :main onyx-tutorial.core
-                           :optimizations :none
+                           :optimizations :simple
                            :pretty-print false}}]}
 
   :figwheel {;; :http-server-root "public" ;; default and assumes "resources"
