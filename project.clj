@@ -6,7 +6,8 @@
 
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.293"]
-                 [org.onyxplatform/onyx-local-rt "0.9.11.0"]]
+                 [org.onyxplatform/onyx-local-rt "0.9.11.0"]
+                 [cljsjs/codemirror "5.19.0-0"]]
 
   :plugins [[lein-figwheel "0.5.8"]
             [lein-cljsbuild "1.1.4" :exclusions [[org.clojure/clojure]]]]
@@ -34,6 +35,8 @@
                            :output-to "resources/public/js/compiled/onyx_tutorial.js"
                            :output-dir "resources/public/js/compiled/out"
                            :source-map-timestamp true
+                           #_[{:file "parinfer/resources/public/codemirror/mode/clojure/clojure-parinfer.js"
+                             :provides ["parinfer.codemirror.mode.clojure.clojure-parinfer"]}]
                            ;; To console.log CLJS data-structures make sure you enable devtools in Chrome
                            ;; https://github.com/binaryage/cljs-devtools
                            :preloads [devtools.preload]}}
@@ -44,6 +47,8 @@
                 :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/compiled/onyx_tutorial.js"
                            :main onyx-tutorial.core
+                           #_[{:file "parinfer/resources/public/codemirror/mode/clojure/clojure-parinfer.js"
+                             :provides ["parinfer.codemirror.mode.clojure.clojure-parinfer"]}]
                            :optimizations :simple
                            :pretty-print false}}]}
 

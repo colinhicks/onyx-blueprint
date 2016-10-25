@@ -1,0 +1,12 @@
+.editor {
+  height: auto;
+}
+
+.enabled-editor {
+  border: 2px dashed #ccc;
+}
+
+.result-viewer {
+  border: 2px solid #ccc;
+}
+
