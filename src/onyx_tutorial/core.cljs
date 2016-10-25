@@ -5,6 +5,8 @@
 
 (enable-console-print!)
 
+(set! (.-user js/cljs) #js {})
+
 (defonce compiler-state (cljs/empty-state))
 
 (defn update-result [value]
