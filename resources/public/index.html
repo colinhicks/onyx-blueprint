@@ -7,44 +7,8 @@
     <link rel="stylesheet" href="css/main.css">
   </head>
   <body>
-      <form id="app">
-        <h2>Onyx tutorial scratchpad</h2>
-        
-        <h4>Function</h4>
-        <textarea rows="5" cols="80" id="fn">
-(defn ^:export my-inc [segment]
-  (update-in segment [:n] inc))
-        </textarea>
-        
-        <h4>Job</h4>
-        <textarea rows="10" cols="80" id="job">
-{:workflow [[:in :inc] [:inc :out]]
- :catalog [{:onyx/name :in
-            :onyx/type :input
-            :onyx/batch-size 20}
-           {:onyx/name :inc
-            :onyx/type :function
-            :onyx/fn ::my-inc
-            :onyx/batch-size 20}
-           {:onyx/name :out
-            :onyx/type :output
-            :onyx/batch-size 20}]
- :lifecycles []}
-        </textarea>
-
-        <h4>Evaluation</h4>
-        <pre>
-(-> (api/init job)
-    (api/new-segment :in {:n 41})
-    (api/new-segment :in {:n 84})
-    (api/drain)
-    (api/stop)
-    (api/env-summary))
-        </pre>
-        <input type="submit" value="Run"/>
-        <h4>Result</h4>
-        <textarea rows="10" cols="80" id="result"></textarea>
-    </form>
-    <script src="js/compiled/onyx_tutorial.js" type="text/javascript"></script>
+      <h2>Onyx tutorial scratchpad</h2>
+      <div id="app"></div>
+      <script src="js/compiled/onyx_tutorial.js" type="text/javascript"></script>
   </body>
 </html>
