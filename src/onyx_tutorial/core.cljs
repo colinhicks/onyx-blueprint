@@ -8,6 +8,12 @@
   [{:component/id ::workflow-header
     :component/type :text/header
     :component/content {:text "Workflow"}}
+
+   {:component/id ::workflow-leadin
+    :component/type :text/body
+    :component/content
+    {:text ["A workflow is the structural specification of an Onyx program. Its purpose is to articulate the paths that data flows through the cluster at runtime. It is specified via a directed, acyclic graph."
+            "The workflow representation is a Clojure vector of vectors. Each inner vector contains exactly two elements, which are keywords. The keywords represent nodes in the graph, and the vector represents a directed edge from the first node to the second."]}}
    
    {:component/id ::workflow-editor
     :component/type :editor/data-structure
@@ -20,6 +26,7 @@
 (def sections
   [{:section/id ::workflow
     :section/layout [[::workflow-header]
+                     [::workflow-leadin]
                      [::workflow-editor]]}
 
    {:section/id ::simple-task

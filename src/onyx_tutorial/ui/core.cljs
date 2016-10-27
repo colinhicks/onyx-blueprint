@@ -3,7 +3,8 @@
             [om.dom :as dom]
             [goog.dom :as gdom]
             [onyx-tutorial.extensions :as extensions]
-            [onyx-tutorial.ui.code-editor]))
+            [onyx-tutorial.ui.code-editor]
+            [onyx-tutorial.ui.text]))
 
 (defui TutorialComponent
     static om/Ident
