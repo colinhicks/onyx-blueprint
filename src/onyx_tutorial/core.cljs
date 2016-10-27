@@ -39,7 +39,7 @@
                      {:eval cljs/js-eval}
                      (fn [result]
                        (let [result' (assoc result :warnings
-                                            (map convert-warning @warnings))]
+                                            (distinct (map convert-warning @warnings)))]
                          (cb result')))))))
 
 (def editor-config
@@ -127,10 +127,15 @@
 (defmulti mutate om/dispatch)
 
 (defmethod mutate 'editor/eval
-  [{:keys [state] :as env} key {:keys [type source script-id] :as params}]
-  {:value {:keys [:editor/output]}
+  [{:keys [state] :as env} key {:keys [type source script-id component-id] :as params}]
+  {:value {:keys []}
    :compile true
-   :action #(swap! state assoc-in [:editor/output] "compiling...")})
+   :action #(swap! state assoc-in
+                   [:tutorial/components
+                    component-id
+                    :component/content
+                    :compile-state]
+                   :compiling)})
 
 (defmulti component-ui (fn [props] (:component/type props)))
 
@@ -186,26 +191,28 @@
     (componentDidMount [this]
       (let [{:keys [component/id]} (om/props this)
             {:keys [handle-change]} (om/get-computed this)
-            textarea-id (str id "-textarea")]
-        (let [cm (editor textarea-id {})]
-          (.on cm "change"
-               (fn []
-                 (handle-change (.getValue cm))))
-          ;; sync initial value
-          (handle-change (.getValue cm)))))
+            textarea-id (str id "-textarea")
+            cm (editor textarea-id {})]
+        (.on cm "change"
+             (fn []
+               (handle-change id (.getValue cm))))
+        ;; sync initial value
+        (handle-change id (.getValue cm))))
 
     (render [this]
       (let [{:keys [component/id component/content]} (om/props this)
-            textarea-id (str id "-textarea")]
+            textarea-id (str id "-textarea")
+            _ (println "cer" (keys content))]
         (dom/textarea #js {:id textarea-id
                            :defaultValue (:default-input content)}))))
 
 (def code-editor (om/factory CodeEditor))
 
 (defn handle-eval-fn [transact]
-  (fn [new-value]
+  (fn [id new-value]
     (transact `[(editor/eval {:type :onyx/fn
                               :source ~new-value
+                              :component-id ~id
                               :script-id "user-input"})])))
 
 (defmethod component-ui :editor/fn
@@ -230,22 +237,46 @@
 
 (def code-output (om/factory CodeOutput))
 
+(defn io-compile [cb {:keys [source script-id component-id]}]
+  (eval-str source script-id
+            (fn [result]
+              ;; todo: is there a better way to do this?
+              (let [merge-payload
+                    {:onyx-tutorial/merge-in
+                     {:content {:compile-result result
+                                :compile-state (if (seq (:warnings result))
+                                                  :compiled-error
+                                                  :compiled-success)}
+                      :keypath [:tutorial/components
+                                component-id
+                                :component/content]}}]
+                  (cb merge-payload)))))
 
-(defn handle-io [{:keys [compile]} cb]
-  (let [{:keys [source script-id] :as eval-request}
-        (-> compile om/query->ast :children first :params)]
-    (eval-str source script-id
-              (fn [result]
-                (cb {:editor/output result})))))
+(defn io [{:keys [compile]} cb]
+  (when compile
+    (->> compile
+         (om/query->ast)
+         :children
+         (map :params)
+         (run! (partial io-compile cb)))))
+
+(defn merge-tree [st {:keys [onyx-tutorial/merge-in] :as novelty}]
+  (if merge-in
+    (update-in st (:keypath merge-in)
+               #(merge % (:content merge-in)))
+    (om/default-merge-tree st novelty)))
 
 (def reconciler
   (om/reconciler
-   {:state init-data
+   {:state (atom (om/tree->db Tutorial init-data true))
     :parser (om/parser {:read read :mutate mutate})
-    :send handle-io
+    :send io
+    :merge-tree merge-tree
     :remotes [:compile]}))
 
 (om/add-root! reconciler Tutorial (gdom/getElement "app"))
+
+;;(pprint/pprint (om/tree->db Tutorial init-data true))
 
 ;;(pprint/pprint @reconciler)
 
