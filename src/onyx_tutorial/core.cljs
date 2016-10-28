@@ -21,10 +21,9 @@
 
    {:component/id ::workflow-graph
     :component/type :graph/simple
-    :component/content {:link {:type :editor
-                               :id ::workflow-editor}}}
+    :component/target ::workflow-editor}
 
-   {:component/id ::task-fn
+   #_{:component/id ::task-fn
     :component/type :editor/fn
     :component/content
     {:default-input "(defn ^:export my-inc [segment]\n  (update-in segment [:n] inc))"}}])
@@ -35,7 +34,7 @@
                      [::workflow-leadin]
                      [::workflow-editor ::workflow-graph]]}
 
-   {:section/id ::simple-task
+   #_{:section/id ::simple-task
     :section/layout [[::task-fn]]}])
 
 (api/render-tutorial! components sections (gdom/getElement "app"))

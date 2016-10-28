@@ -5,6 +5,10 @@
 
 
 (defui Text
+  static om/IQuery
+  (query [this]
+    [:component/id :component/type :component/content])
+    
   Object
   (render [this]
     (let [{:keys [component/content component/type]} (om/props this)

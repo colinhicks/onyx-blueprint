@@ -7,22 +7,23 @@
             [onyx-tutorial.ui.core :as ui]
             [onyx-tutorial.parser]))
 
-
-(defn io-compile [cb {:keys [source script-id component-id]}]
+(defn compile* [{:keys [source script-id component-id]} cb]
   (self-host/eval-str
-   source
+   (str source)
    script-id
    (fn [result]
-     ;; todo: is there a better way to do this?
-     (let [merge-payload {:onyx-tutorial/merge-in
-                          {:content {:compile-result result
-                                     :compile-state (if (seq (:warnings result))
-                                                      :compiled-error
-                                                      :compiled-success)}
-                           :keypath [:tutorial/components
-                                     component-id
-                                     :component/content]}}]
-       (cb merge-payload)))))
+     (cb {:component/id component-id
+          :result result
+          :state (if (seq (:warnings result))
+                   :compiled-error
+                   :compiled-success)}))))
+
+(defn io-compile [cb {:keys [component-id] :as eval-req}]
+  (compile* eval-req (fn [result]
+                       ;; todo: is there a better way to do this?
+                       (cb {:onyx-tutorial/merge-in
+                            {:content result
+                             :keypath [:tutorial/compilations component-id]}}))))
 
 (defn io [{:keys [compile]} cb]
   (when compile
@@ -33,10 +34,12 @@
          (run! (partial io-compile cb)))))
 
 (defn merge-tree [st {:keys [onyx-tutorial/merge-in] :as novelty}]
-  (if merge-in
-    (update-in st (:keypath merge-in)
-               #(merge % (:content merge-in)))
-    (om/default-merge-tree st novelty)))
+  (let [merge-result (if merge-in
+                       (update-in st (:keypath merge-in)
+                                  #(merge % (:content merge-in)))
+                       (om/default-merge-tree st novelty))]
+    ;;(do (println "-MR-") (pprint/pprint merge-result))    
+    merge-result))
 
 (defn into-tree [components layouts]
   (mapv (fn [{:keys [section/id section/layout]}]
@@ -51,15 +54,44 @@
                  layout)})
         layouts))
 
-(defn render-tutorial! [components sections target-el]
-  (let [init-data {:tutorial/sections (into-tree components sections)}
-        normalized-data (om/tree->db ui/Tutorial init-data true)
-        reconciler (om/reconciler
-                    {:state (atom normalized-data)
-                     :parser (om/parser {:read extensions/parser-read
-                                         :mutate extensions/parser-mutate})
-                     :send io
-                     :merge-tree merge-tree
-                     :remotes [:compile]})]
+(def run-async! #'cljs.js/run-async!)
 
-    (om/add-root! reconciler ui/Tutorial target-el)))
+(defn compile-default-input! [components done-cb]
+  (let [compilations (->> components
+                          (filter #(= :editor (keyword (namespace (:component/type %)))))
+                          (map #(vector (:component/id %)
+                                        (get-in % [:component/content :default-input])))
+                          (filter second))
+        results (atom {})]
+    (run-async!
+     (fn [[id default-input] cb]
+       (compile* {:component-id id
+                  :script-id (str (name id) "-initial-value")
+                  :source default-input}
+                 (fn [result]
+                   (swap! results assoc-in [id] result)
+                   (cb nil))))
+     compilations
+     :unused
+     (fn [error-result]
+       (done-cb @results)))))
+
+(defn render-tutorial! [components sections target-el]
+  ;; todo alternative to blocking here?
+  (compile-default-input!
+   components
+   (fn [compilations]
+     (let [init-data {:tutorial/sections (into-tree components sections)}
+           normalized-data (assoc (om/tree->db ui/Tutorial init-data true)
+                                  :tutorial/compilations compilations)
+           reconciler (om/reconciler
+                       {:state (atom normalized-data)
+                        :parser (om/parser {:read extensions/parser-read
+                                            :mutate extensions/parser-mutate})
+                        :send io
+                        :merge-tree merge-tree
+                        :remotes [:compile]})]
+
+       ;;(pprint/pprint @reconciler)
+
+       (om/add-root! reconciler ui/Tutorial target-el)))))

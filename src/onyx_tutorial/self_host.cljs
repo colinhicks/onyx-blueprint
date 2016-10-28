@@ -26,5 +26,5 @@
                      {:eval cljs/js-eval}
                      (fn [result]
                        (let [result' (assoc result :warnings
-                                            (distinct (map convert-warning @warnings)))]
+                                            (into [] (distinct (map convert-warning @warnings))))]
                          (cb result')))))))

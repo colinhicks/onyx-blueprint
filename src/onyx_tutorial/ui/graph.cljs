@@ -8,14 +8,9 @@
   (str (name id) "-graph"))
 
 (defui Graph
-  static om/Ident
-  (ident [this {:keys [component/content]}]
-    [:tutorial/components (get-in content [:link :id])])
-    
   static om/IQuery
   (query [this]
-    ;; todo fix
-    [[:tutorial/components :onyx-tutorial.core/workflow-editor]])
+    [:component/id :component/type :component/target])
     
   Object
   (componentDidMount [this]
@@ -25,8 +20,7 @@
   
   (render [this]
     (let [{:keys [component/id] :as props} (om/props this)
-          _ (println "***")
-          _ (pprint/pprint props)
+          _ (pprint/pprint (:component/target props))
           graph-id (graph-id id)]
       (dom/div #js {:id graph-id} graph-id))))
 

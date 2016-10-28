@@ -29,41 +29,38 @@
         (js/goog.dom.classlist.addAll wrapper (clj->js (conj css-classes "editor")))
         ed))))
 
+(defn textarea-id [component-id]
+  (str (name component-id) "-textarea"))
+
 (defui CodeEditor
+    static om/IQuery
+    (query [this]
+      [:component/id :component/type :component/content])
+    
     Object
     (componentDidMount [this]
       (let [{:keys [component/id]} (om/props this)
-            {:keys [handle-change]} (om/get-computed this)
-            textarea-id (str id "-textarea")
-            cm (editor textarea-id {})]
+            cm (editor (textarea-id id) {})]
+        ;; todo debounce
         (.on cm "change"
              (fn []
-               (handle-change id (.getValue cm))))
-        ;; sync initial value
-        (handle-change id (.getValue cm))))
+               (om/transact! this `[(editor/eval {:type :onyx/fn
+                                                  :source ~(.getValue cm)
+                                                  :component-id ~id
+                                                  :script-id "user-input"})
+                                    :tutorial/sections])))))
 
     (render [this]
-      (let [{:keys [component/id component/content]} (om/props this)
-            textarea-id (str id "-textarea")
-            _ (println "cer" (keys content))]
-        (dom/textarea #js {:id textarea-id
+      (let [{:keys [component/id component/content] :as props} (om/props this)]
+        (dom/textarea #js {:id (textarea-id id)
                            :defaultValue (:default-input content)}))))
 
 (def code-editor (om/factory CodeEditor))
 
-(defn handle-eval-fn [transact]
-  (fn [id new-value]
-    (transact `[(editor/eval {:type :onyx/fn
-                              :source ~new-value
-                              :component-id ~id
-                              :script-id "user-input"})])))
-
 (defmethod extensions/component-ui :editor/fn
   [props]
-  (let [{:keys [transact]} (om/get-computed props)]
-    (code-editor (om/computed props {:handle-change (handle-eval-fn transact)}))))
+  (code-editor props))
 
 (defmethod extensions/component-ui :editor/data-structure
   [props]
-  (let [{:keys [transact]} (om/get-computed props)]
-    (code-editor (om/computed props {:handle-change (handle-eval-fn transact)}))))
+  (code-editor props))

@@ -3,26 +3,24 @@
             [om.dom :as dom]
             [goog.dom :as gdom]
             [onyx-tutorial.extensions :as extensions]
-            [onyx-tutorial.ui.code-editor]
-            [onyx-tutorial.ui.text]
-            [onyx-tutorial.ui.graph]))
+            [onyx-tutorial.ui.code-editor :refer [CodeEditor]]
+            [onyx-tutorial.ui.text :refer [Text]]
+            [onyx-tutorial.ui.graph :refer [Graph]]))
 
 (defui TutorialComponent
     static om/Ident
-    (ident [this {:keys [component/id]}]
+    (ident [this {:keys [component/id] :as props}]
       [:tutorial/components id])
 
     static om/IQuery
     (query [this]
-      [:component/id :component/type :component/content
-       {:component.graph/content (om/get-query onyx-tutorial.ui.graph/Graph)}])
+      {:text (om/get-query Text)
+       :graph (om/get-query Graph)
+       :editor (om/get-query CodeEditor)})
 
     Object
     (render [this]
-      (let [props (-> (om/props this)
-                      (om/computed {:transact (fn [expr]
-                                                (om/transact! this expr))}))]
-        (extensions/component-ui props))))
+      (extensions/component-ui (om/props this))))
 
 (def component (om/factory TutorialComponent))
 
