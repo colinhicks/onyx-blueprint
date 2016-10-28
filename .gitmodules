@@ -1,3 +1,6 @@
 [submodule "parinfer"]
 	path = parinfer
 	url = https://github.com/jaredly/codemirror-parinfer.git
+[submodule "cytoscape.js"]
+	path = cytoscape.js
+	url = https://github.com/cytoscape/cytoscape.js.git

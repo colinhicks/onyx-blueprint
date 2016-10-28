@@ -4,7 +4,8 @@
             [goog.dom :as gdom]
             [onyx-tutorial.extensions :as extensions]
             [onyx-tutorial.ui.code-editor]
-            [onyx-tutorial.ui.text]))
+            [onyx-tutorial.ui.text]
+            [onyx-tutorial.ui.graph]))
 
 (defui TutorialComponent
     static om/Ident
@@ -13,7 +14,8 @@
 
     static om/IQuery
     (query [this]
-      [:component/id :component/type :component/content])
+      [:component/id :component/type :component/content
+       {:component.graph/content (om/get-query onyx-tutorial.ui.graph/Graph)}])
 
     Object
     (render [this]

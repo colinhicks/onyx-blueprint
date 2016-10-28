@@ -17,17 +17,23 @@
    
    {:component/id ::workflow-editor
     :component/type :editor/data-structure
-    :component/content {:default-input "[[:a :b] [:b :c]]"}}
+    :component/content {:default-input '[[:a :b] [:b :c]]}}
+
+   {:component/id ::workflow-graph
+    :component/type :graph/simple
+    :component/content {:link {:type :editor
+                               :id ::workflow-editor}}}
 
    {:component/id ::task-fn
     :component/type :editor/fn
-    :component/content {:default-input "(defn ^:export my-inc [segment]\n  (update-in segment [:n] inc))"}}])
+    :component/content
+    {:default-input "(defn ^:export my-inc [segment]\n  (update-in segment [:n] inc))"}}])
 
 (def sections
   [{:section/id ::workflow
     :section/layout [[::workflow-header]
                      [::workflow-leadin]
-                     [::workflow-editor]]}
+                     [::workflow-editor ::workflow-graph]]}
 
    {:section/id ::simple-task
     :section/layout [[::task-fn]]}])
