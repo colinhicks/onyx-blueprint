@@ -17,7 +17,7 @@
    
    {:component/id ::workflow-editor
     :component/type :editor/data-structure
-    :component/content {:default-input '[[:a :b] [:b :c]]}}
+    :component/content {:default-input '[[:a :b] [:b :c] [:b :d]]}}
 
    {:component/id ::workflow-graph
     :component/type :graph/simple
