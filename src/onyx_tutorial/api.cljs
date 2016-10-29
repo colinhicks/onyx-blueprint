@@ -1,7 +1,6 @@
 (ns onyx-tutorial.api
   (:require [cljs.pprint :as pprint]
             [om.next :as om]
-            [onyx-local-rt.api :as onyx.api]
             [onyx-tutorial.extensions :as extensions]
             [onyx-tutorial.self-host :as self-host]
             [onyx-tutorial.ui.core :as ui]

@@ -26,11 +26,20 @@
       (let [ed (.fromTextArea js/CodeMirror el (clj->js (merge editor-config opts)))
             wrapper (.getWrapperElement ed)]
         (set! (.-id wrapper) (str input-id "-editor"))
-        (js/goog.dom.classlist.addAll wrapper (clj->js (conj css-classes "editor")))
+        (js/goog.dom.classlist.addAll
+         wrapper
+         (clj->js (conj css-classes "col" "component" "component-editor")))
         ed))))
 
 (defn textarea-id [component-id]
   (str (name component-id) "-textarea"))
+
+(defn format-default-input [default-input]
+  (if (string? default-input)
+    default-input
+    (-> default-input
+        pprint/pprint
+        with-out-str)))
 
 (defui CodeEditor
     static om/IQuery
@@ -40,7 +49,8 @@
     Object
     (componentDidMount [this]
       (let [{:keys [component/id]} (om/props this)
-            cm (editor (textarea-id id) {})]
+            {:keys [editor/codemirror-opts]} (om/get-computed this)
+            cm (editor (textarea-id id) codemirror-opts)]
         ;; todo debounce
         (.on cm "change"
              (fn []
@@ -53,7 +63,7 @@
     (render [this]
       (let [{:keys [component/id component/content] :as props} (om/props this)]
         (dom/textarea #js {:id (textarea-id id)
-                           :defaultValue (:default-input content)}))))
+                           :defaultValue (format-default-input (:default-input content))}))))
 
 (def code-editor (om/factory CodeEditor))
 

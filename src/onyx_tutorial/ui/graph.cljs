@@ -40,7 +40,9 @@
                       :target-arrow-shape "triangle"}}]
      :layout {:name "breadthfirst"
               :directed true
-              :animate true}}))
+              :animate true}
+     :userZoomingEnabled false
+     :userPanningEnabled false}))
 
 (defn render-graph! [props]
   (-> props
@@ -64,7 +66,7 @@
   (render [this]
     (let [{:keys [component/id] :as props} (om/props this)
           graph-id (graph-id id)]
-      (dom/div #js {:id graph-id :className "component component-graph"}))))
+      (dom/div #js {:id graph-id :className "col component component-graph"}))))
 
 (def graph (om/factory Graph))
 

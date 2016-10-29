@@ -1,17 +1,19 @@
-.editor {
+.row {
+  display: inline-block;
+  clear: both;
+  float: left;
+}
+
+.col {
+  float: left;
+}
+
+.component-editor {
   height: auto;
 }
 
-.enabled-editor {
-  border: 2px dashed #ccc;
-}
-
-.result-viewer {
-  border: 2px solid #ccc;
-}
-
-
 .component-graph {
-  height: 200px;
+  min-width: 300px;
+  min-height: 300px;
+  height: auto;
 }
-

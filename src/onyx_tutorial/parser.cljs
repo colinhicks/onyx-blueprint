@@ -1,6 +1,7 @@
 (ns onyx-tutorial.parser
   (:require [cljs.pprint :as pprint]
             [om.next :as om]
+            [onyx-local-rt.api :as onyx.api]
             [onyx-tutorial.extensions :refer [parser-read parser-mutate]]))
 
 
@@ -49,3 +50,36 @@
 (defmethod parser-mutate 'editor/eval
   [{:keys [state] :as env} key {:keys [type source script-id component-id] :as params}]
   {:compile true})
+
+(defmethod parser-mutate 'onyx/init
+  [{:keys [state] :as env} key {:keys [id job]}]
+  {:action (fn []
+             (swap! state assoc-in
+                    [:tutorial/components id :component/content :job]
+                    (onyx.api/init job)))})
+
+(defmethod parser-mutate 'onyx/new-segment
+  [{:keys [state] :as env} key {:keys [id]}]
+  {:action (fn []
+             (swap! state update-in
+                    [:tutorial/components id :component/content]
+                    (fn [{:keys [gen-segment] :as content}]
+                      (update-in content [:job]
+                                 #(onyx.api/new-segment % :in (gen-segment))))))})
+
+
+(defmethod parser-mutate 'onyx/tick
+  [{:keys [state] :as env} key {:keys [id]}]
+  {:action (fn []
+             (swap! state update-in
+                    [:tutorial/components id :component/content :job]
+                    #(onyx.api/tick %)))})
+
+(defmethod parser-mutate 'onyx/drain
+  [{:keys [state] :as env} key {:keys [id]}]
+  {:action (fn []
+             (swap! state update-in
+                    [:tutorial/components id :component/content :job]
+                    #(-> %
+                         (onyx.api/drain)
+                         (onyx.api/stop))))})

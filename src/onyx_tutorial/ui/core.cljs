@@ -5,7 +5,8 @@
             [onyx-tutorial.extensions :as extensions]
             [onyx-tutorial.ui.code-editor :refer [CodeEditor]]
             [onyx-tutorial.ui.text :refer [Text]]
-            [onyx-tutorial.ui.graph :refer [Graph]]))
+            [onyx-tutorial.ui.graph :refer [Graph]]
+            [onyx-tutorial.ui.simulator :refer [Simulator]]))
 
 (defui TutorialComponent
     static om/Ident
@@ -16,7 +17,8 @@
     (query [this]
       {:text (om/get-query Text)
        :graph (om/get-query Graph)
-       :editor (om/get-query CodeEditor)})
+       :editor (om/get-query CodeEditor)
+       :simulator (om/get-query Simulator)})
 
     Object
     (render [this]

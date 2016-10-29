@@ -18,7 +18,7 @@
         (apply dom/div nil
                (map (partial element #js {:className (name type)})
                     text))
-        (element #js {:className (name type)} text)))))
+        (element #js {:className (str (name type) "component col")} text)))))
 
 (def text (om/factory Text))
 
