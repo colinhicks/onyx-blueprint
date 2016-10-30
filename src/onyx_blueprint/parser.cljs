@@ -48,7 +48,7 @@
 
 (defmethod parser-mutate 'editor/eval
   [{:keys [state] :as env} key {:keys [type source script-id component-id] :as params}]
-  {:compile true})
+  {:evaluate true})
 
 (defmethod parser-mutate 'onyx/init
   [{:keys [state] :as env} key {:keys [id job]}]
@@ -65,7 +65,6 @@
                     (fn [{:keys [gen-segment] :as content}]
                       (update-in content [:job]
                                  #(onyx.api/new-segment % :in (gen-segment))))))})
-
 
 (defmethod parser-mutate 'onyx/tick
   [{:keys [state] :as env} key {:keys [id]}]

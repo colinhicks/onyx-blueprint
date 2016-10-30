@@ -6,7 +6,7 @@
             [onyx-blueprint.parser]
             [onyx-blueprint.self-host :as self-host]))
 
-(defn compile* [{:keys [source script-id component-id]} cb]
+(defn evaluate* [{:keys [source script-id component-id]} cb]
   (self-host/eval-str
    (str source)
    script-id
@@ -17,20 +17,20 @@
                    :compiled-error
                    :compiled-success)}))))
 
-(defn io-compile [cb {:keys [component-id] :as eval-req}]
-  (compile* eval-req (fn [result]
+(defn io-evaluate [cb {:keys [component-id] :as eval-req}]
+  (evaluate* eval-req (fn [result]
                        ;; todo: is there a better way to do this?
                        (cb {:onyx-blueprint/merge-in
                             {:content result
                              :keypath [:tutorial/compilations component-id]}}))))
 
-(defn io [{:keys [compile]} cb]
-  (when compile
-    (->> compile
+(defn io [{:keys [evaluate]} cb]
+  (when evaluate
+    (->> evaluate
          (om/query->ast)
          :children
          (map :params)
-         (run! (partial io-compile cb)))))
+         (run! (partial io-evaluate cb)))))
 
 (defn merge-tree [st {:keys [onyx-blueprint/merge-in] :as novelty}]
   (let [merge-result (if merge-in
@@ -55,7 +55,7 @@
 
 (def run-async! #'cljs.js/run-async!)
 
-(defn compile-default-input! [components done-cb]
+(defn eval-default-input! [components done-cb]
   (let [compilations (->> components
                           (filter #(= :editor (keyword (namespace (:component/type %)))))
                           (map #(vector (:component/id %)
@@ -64,7 +64,7 @@
         results (atom {})]
     (run-async!
      (fn [[id default-input] cb]
-       (compile* {:component-id id
+       (evaluate* {:component-id id
                   :script-id (str (name id) "-initial-value")
                   :source default-input}
                  (fn [result]
@@ -77,7 +77,7 @@
 
 (defn render-tutorial! [components sections target-el]
   ;; todo alternative to blocking here?
-  (compile-default-input!
+  (eval-default-input!
    components
    (fn [compilations]
      (let [init-data {:tutorial/sections (into-tree components sections)}
@@ -89,7 +89,7 @@
                                             :mutate extensions/parser-mutate})
                         :send io
                         :merge-tree merge-tree
-                        :remotes [:compile]})]
+                        :remotes [:evaluate]})]
 
        ;;(pprint/pprint @reconciler)
 
