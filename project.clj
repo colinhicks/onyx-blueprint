@@ -1,5 +1,5 @@
-(defproject org.onyxplatform/onyx-tutorial "0.1.0-SNAPSHOT"
-  :description "Learn Onyx interactively"
+(defproject org.onyxplatform/onyx-blueprint "0.1.0-SNAPSHOT"
+  :description "Support for learning Onyx interactively"
   :url ""
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -24,16 +24,15 @@
                 ;; the presence of a :figwheel configuration here
                 ;; will cause figwheel to inject the figwheel client
                 ;; into your build
-                :figwheel {:on-jsload "onyx-tutorial.core/on-js-reload"
-                           ;; :open-urls will pop open your application
+                :figwheel { ;; :open-urls will pop open your application
                            ;; in the default browser once Figwheel has
                            ;; started and complied your application.
                            ;; Comment this out once it no longer serves you.
                            :open-urls ["http://localhost:3449/index.html"]}
 
-                :compiler {:main onyx-tutorial.core
+                :compiler {:main onyx-blueprint.core
                            :asset-path "js/compiled/out"
-                           :output-to "resources/public/js/compiled/onyx_tutorial.js"
+                           :output-to "resources/public/js/compiled/onyx_blueprint.js"
                            :output-dir "resources/public/js/compiled/out"
                            :source-map-timestamp true
                            #_[{:file "parinfer/resources/public/codemirror/mode/clojure/clojure-parinfer.js"
@@ -46,8 +45,8 @@
                ;; lein cljsbuild once min
                {:id "min"
                 :source-paths ["src"]
-                :compiler {:output-to "resources/public/js/compiled/onyx_tutorial.js"
-                           :main onyx-tutorial.core
+                :compiler {:output-to "resources/public/js/compiled/onyx_blueprint.js"
+                           :main onyx-blueprint.core
                            #_[{:file "parinfer/resources/public/codemirror/mode/clojure/clojure-parinfer.js"
                              :provides ["parinfer.codemirror.mode.clojure.clojure-parinfer"]}]
                            :optimizations :simple
