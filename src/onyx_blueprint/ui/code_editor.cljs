@@ -58,7 +58,7 @@
                                                   :source ~(.getValue cm)
                                                   :component-id ~id
                                                   :script-id "user-input"})
-                                    :tutorial/sections])))))
+                                    :blueprint/sections])))))
 
     (render [this]
       (let [{:keys [component/id component/content] :as props} (om/props this)]

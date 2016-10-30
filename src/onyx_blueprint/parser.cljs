@@ -15,7 +15,7 @@
 (defmethod parser-read :component/target
   [{:keys [state query parser data] :as env} key _]
   (let [target-id (get data key)]
-    {:value (get-in @state [:tutorial/compilations target-id])}))
+    {:value (get-in @state [:blueprint/evaluations target-id])}))
 
 (defmethod parser-read :row/items
   [{:keys [state query parser data] :as env} key _]
@@ -40,7 +40,7 @@
   (let [rows (get data key)]
     {:value (mapv (partial doparse parser env query) rows)}))
 
-(defmethod parser-read :tutorial/sections
+(defmethod parser-read :blueprint/sections
   [{:keys [state query parser] :as env} key params]
   (let [st @state
         sections (get st key)]
@@ -54,14 +54,14 @@
   [{:keys [state] :as env} key {:keys [id job]}]
   {:action (fn []
              (swap! state assoc-in
-                    [:tutorial/components id :component/content :job]
+                    [:blueprint/components id :component/content :job]
                     (onyx.api/init job)))})
 
 (defmethod parser-mutate 'onyx/new-segment
   [{:keys [state] :as env} key {:keys [id]}]
   {:action (fn []
              (swap! state update-in
-                    [:tutorial/components id :component/content]
+                    [:blueprint/components id :component/content]
                     (fn [{:keys [gen-segment] :as content}]
                       (update-in content [:job]
                                  #(onyx.api/new-segment % :in (gen-segment))))))})
@@ -70,14 +70,14 @@
   [{:keys [state] :as env} key {:keys [id]}]
   {:action (fn []
              (swap! state update-in
-                    [:tutorial/components id :component/content :job]
+                    [:blueprint/components id :component/content :job]
                     #(onyx.api/tick %)))})
 
 (defmethod parser-mutate 'onyx/drain
   [{:keys [state] :as env} key {:keys [id]}]
   {:action (fn []
              (swap! state update-in
-                    [:tutorial/components id :component/content :job]
+                    [:blueprint/components id :component/content :job]
                     #(-> %
                          (onyx.api/drain)
                          (onyx.api/stop))))})

@@ -11,7 +11,7 @@
 (defui TutorialComponent
     static om/Ident
     (ident [this {:keys [component/id] :as props}]
-      [:tutorial/components id])
+      [:blueprint/components id])
 
     static om/IQuery
     (query [this]
@@ -45,9 +45,9 @@
 (defui Tutorial
     static om/IQuery
     (query [this]
-      [{:tutorial/sections (om/get-query Section)}])
+      [{:blueprint/sections (om/get-query Section)}])
 
     Object
     (render [this]
-      (let [{:keys [tutorial/sections] :as props} (om/props this)]
+      (let [{:keys [blueprint/sections] :as props} (om/props this)]
         (apply dom/div nil (mapv section sections)))))

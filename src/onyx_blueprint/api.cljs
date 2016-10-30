@@ -22,7 +22,7 @@
                        ;; todo: is there a better way to do this?
                        (cb {:onyx-blueprint/merge-in
                             {:content result
-                             :keypath [:tutorial/compilations component-id]}}))))
+                             :keypath [:blueprint/evaluations component-id]}}))))
 
 (defn io [{:keys [evaluate]} cb]
   (when evaluate
@@ -56,7 +56,7 @@
 (def run-async! #'cljs.js/run-async!)
 
 (defn eval-default-input! [components done-cb]
-  (let [compilations (->> components
+  (let [evaluations (->> components
                           (filter #(= :editor (keyword (namespace (:component/type %)))))
                           (map #(vector (:component/id %)
                                         (get-in % [:component/content :default-input])))
@@ -70,7 +70,7 @@
                  (fn [result]
                    (swap! results assoc-in [id] result)
                    (cb nil))))
-     compilations
+     evaluations
      :unused
      (fn [error-result]
        (done-cb @results)))))
@@ -79,10 +79,10 @@
   ;; todo alternative to blocking here?
   (eval-default-input!
    components
-   (fn [compilations]
-     (let [init-data {:tutorial/sections (into-tree components sections)}
+   (fn [evaluations]
+     (let [init-data {:blueprint/sections (into-tree components sections)}
            normalized-data (assoc (om/tree->db ui/Tutorial init-data true)
-                                  :tutorial/compilations compilations)
+                                  :blueprint/evaluations evaluations)
            reconciler (om/reconciler
                        {:state (atom normalized-data)
                         :parser (om/parser {:read extensions/parser-read

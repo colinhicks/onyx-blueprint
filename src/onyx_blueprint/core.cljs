@@ -110,7 +110,3 @@
                      [::job-ex1-simulator]]}])
 
 (api/render-tutorial! components sections (gdom/getElement "app"))
-
-(defn on-js-reload []
-  )
-
