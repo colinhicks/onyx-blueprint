@@ -101,7 +101,7 @@
   [{:section/id ::workflow
     :section/layout [[::workflow-header]
                      [::workflow-leadin]
-                     [::workflow-ex1-data ::workflow-ex1-graph]
+                     '[::workflow-ex1-data (::workflow-ex1-graph {:className "test"})]
                      [::workflow-ex2-data ::workflow-ex2-graph]
                      [::workflow-ex3-data ::workflow-ex3-graph]]}
    {:section/id ::catalog

@@ -4,7 +4,8 @@
             [goog.dom :as gdom]
             [om.dom :as dom]
             [om.next :as om :refer-macros [defui]]
-            [onyx-blueprint.extensions :as extensions]))
+            [onyx-blueprint.extensions :as extensions]
+            [onyx-blueprint.ui.helpers :as helpers]))
 
 (defn graph-id [id]
   (str (name id) "-graph"))
@@ -52,7 +53,7 @@
 (defui Graph
   static om/IQuery
   (query [this]
-    [:component/id :component/type :evaluations/link])
+    [:component/id :component/type :evaluations/link :layout/hints])
     
   Object
   (componentDidMount [this]
@@ -63,9 +64,9 @@
     (render-graph! (om/props this)))
   
   (render [this]
-    (let [{:keys [component/id] :as props} (om/props this)
+    (let [{:keys [component/id layout/hints] :as props} (om/props this)
           graph-id (graph-id id)]
-      (dom/div #js {:id graph-id :className "col component component-graph"}))))
+      (dom/div #js {:id graph-id :className (helpers/component-css-classes props)}))))
 
 (def graph (om/factory Graph))
 

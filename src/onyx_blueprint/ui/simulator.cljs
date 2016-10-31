@@ -4,6 +4,7 @@
             [om.next :as om :refer-macros [defui]]
             [onyx-blueprint.extensions :as extensions]
             [onyx-blueprint.ui.code-editor :as code-editor]
+            [onyx-blueprint.ui.helpers :as helpers]
             [onyx-local-rt.api :as onyx.api]))
 
 (defn button [label cb]
@@ -24,7 +25,7 @@
           valid-user-fn? (= :success (-> link :user-fn :state))
           env-summary (if job-env (onyx.api/env-summary job-env))
           transact! (partial om/transact! this)]
-      (apply dom/div #js {:id (name id) :className "col component component-editor"}
+      (apply dom/div #js {:id (name id) :className (helpers/component-css-classes props)}
              (cond-> []
                (not valid-user-fn?)
                (conj (dom/pre nil (with-out-str (pprint/pprint (-> link :user-fn :result :warnings)))))

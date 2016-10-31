@@ -41,17 +41,28 @@
     merge-result))
 
 (defn into-tree [components layouts]
-  (mapv (fn [{:keys [section/id section/layout]}]
-          {:section/id id
-           :section/rows
-           (mapv (fn [items]
-                   {:row/items (mapv
-                            (fn [cid]
-                              (let [component (some #(when (= cid (:component/id %)) %) components)]
-                                (assoc component :section/id id)))
-                            items)})
-                 layout)})
-        layouts))
+  (->> layouts
+       (map (fn [{:keys [section/id section/layout]}]
+              {:section/id id
+               :section/rows
+               (->> layout
+                    (map (fn [row-expr]
+                           (let [items (-> row-expr om/query->ast :children)]
+                             {:row/items
+                              (->> items
+                                   (map
+                                    (fn [{:keys [key params]}]
+                                      (if-let [component (some
+                                                          #(when (= key (:component/id %)) %)
+                                                          components)]
+                                        (assoc component
+                                               :section/id id
+                                               :layout/hints params)
+                                        {:component/id key
+                                         :component/type :error/not-found})))
+                                   (into []))})))
+                    (into []))}))
+       (into [])))
 
 (def run-async! #'cljs.js/run-async!)
 

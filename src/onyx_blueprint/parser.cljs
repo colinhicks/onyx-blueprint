@@ -37,7 +37,7 @@
                     (let [type-ns (keyword (namespace type))
                           ;; todo: less weird
                           focused-query (if (map? query)
-                                          (get query type-ns)
+                                          (get query type-ns [:component/id :component/type])
                                           query)]
                       (doparse parser env focused-query c))))
              (into []))]

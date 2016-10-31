@@ -1,5 +1,6 @@
 (ns onyx-blueprint.ui.code-editor
-  (:require [cljs.pprint :as pprint]
+  (:require [clojure.string :as str]
+            [cljs.pprint :as pprint]
             [cljsjs.codemirror]
             [cljsjs.codemirror.addon.edit.closebrackets]
             [cljsjs.codemirror.addon.edit.matchbrackets]
@@ -11,6 +12,7 @@
             [om.dom :as dom]
             [om.next :as om :refer-macros [defui]]
             [onyx-blueprint.extensions :as extensions]
+            [onyx-blueprint.ui.helpers :as helpers]
             [onyx-local-rt.api :as api]))
 
 (aset js/CodeMirror "keyMap" "default" "Shift-Tab" "indentLess")
@@ -20,7 +22,7 @@
    :autoCloseBrackets true
    :matchBrackets true})
 
-(defn editor [input-id opts & css-classes]
+(defn editor [input-id opts css-classes]
   (let [el (.getElementById js/document input-id)]
     (when-not (= "none" (.. el -style -display))
       (let [ed (.fromTextArea js/CodeMirror el (clj->js (merge editor-config opts)))
@@ -28,7 +30,7 @@
         (set! (.-id wrapper) (str input-id "-editor"))
         (js/goog.dom.classlist.addAll
          wrapper
-         (clj->js (conj css-classes "col" "component" "component-editor")))
+         (clj->js (str/split css-classes #" ")))
         ed))))
 
 (defn textarea-id [component-id]
@@ -44,13 +46,14 @@
 (defui CodeEditor
     static om/IQuery
     (query [this]
-      [:component/id :component/type :content/default-input])
+      [:component/id :component/type :content/default-input :layout/hints])
     
     Object
     (componentDidMount [this]
-      (let [{:keys [component/id]} (om/props this)
+      (let [{:keys [component/id] :as props} (om/props this)
             {:keys [editor/codemirror-opts]} (om/get-computed this)
-            cm (editor (textarea-id id) codemirror-opts)]
+            css-classes (helpers/component-css-classes props)
+            cm (editor (textarea-id id) codemirror-opts css-classes)]
         ;; todo debounce
         (.on cm "change"
              (fn []
