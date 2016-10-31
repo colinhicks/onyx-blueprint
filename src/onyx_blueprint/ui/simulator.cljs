@@ -21,34 +21,37 @@
     (let [{:keys [component/id evaluations/link] :as props} (om/props this)
           init-data (-> link :init-data :result :value)
           job-env (-> link :job-env :result :value)
+          valid-user-fn? (= :success (-> link :user-fn :state))
           env-summary (if job-env (onyx.api/env-summary job-env))
           transact! (partial om/transact! this)]
       (apply dom/div #js {:id (name id) :className "col component component-editor"}
-               (cond-> []
-                 (nil? job-env)
-                 (conj (button "Initialize job"
-                               (fn [evt]
-                                 (.preventDefault evt)
-                                 (transact! `[(onyx/init {:id ~id :job ~init-data})]))))
-                 job-env
-                 (conj (button "Reinitialize job"
-                               (fn [evt]
-                                 (.preventDefault evt)
-                                 (transact! `[(onyx/init {:id ~id :job ~init-data})])))
-                       (button "Generate input"
-                               (fn [evt]
-                                 (.preventDefault evt)
-                                 (transact! `[(onyx/new-segment {:id ~id})])))
-                       (button ">"
-                               (fn [evt]
-                                 (.preventDefault evt)
-                                 (transact! `[(onyx/tick {:id ~id})])))
-                       (button ">>"
-                               (fn [evt]
-                                 (.preventDefault evt)
-                                 (transact! `[(onyx/drain {:id ~id})])))                       
-                       (dom/pre nil (with-out-str (pprint/pprint env-summary))))
-                 )))))
+             (cond-> []
+               (not valid-user-fn?)
+               (conj (dom/pre nil (with-out-str (pprint/pprint (-> link :user-fn :result :warnings)))))
+               
+               (and valid-user-fn? (nil? job-env))
+               (conj (button "Initialize job"
+                             (fn [evt]
+                               (.preventDefault evt)
+                               (transact! `[(onyx/init {:id ~id :job ~init-data})]))))
+               (and valid-user-fn? job-env)
+               (conj (button "Reinitialize job"
+                             (fn [evt]
+                               (.preventDefault evt)
+                               (transact! `[(onyx/init {:id ~id :job ~init-data})])))
+                     (button "Generate input"
+                             (fn [evt]
+                               (.preventDefault evt)
+                               (transact! `[(onyx/new-segment {:id ~id})])))
+                     (button ">"
+                             (fn [evt]
+                               (.preventDefault evt)
+                               (transact! `[(onyx/tick {:id ~id})])))
+                     (button ">>"
+                             (fn [evt]
+                               (.preventDefault evt)
+                               (transact! `[(onyx/drain {:id ~id})])))                       
+                     (dom/pre nil (with-out-str (pprint/pprint env-summary)))))))))
 
 (def simulator (om/factory Simulator))
 

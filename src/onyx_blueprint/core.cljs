@@ -86,6 +86,7 @@
    
    {:component/id ::job-ex1-fn
     :component/type :editor/fn
+    :evaluations/init :content/default-input
     :content/default-input
     "(defn ^:export my-inc [segment]\n  (update-in segment [:n] inc))"}
 
@@ -93,7 +94,8 @@
     :component/type :simulator/basic
     :simulator/gen-segment (fn [] {:n (rand-int 100)})
     :evaluations/link {:init-data ::job-ex1-data
-                       :job-env ::job-ex1-simulator}}])
+                       :job-env ::job-ex1-simulator
+                       :user-fn ::job-ex1-fn}}])
    
 (def sections
   [{:section/id ::workflow
