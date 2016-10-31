@@ -14,8 +14,8 @@
             (apply dep/depend g (reverse edge)))
           (dep/graph) workflow))
 
-(defn props->cytoscape-opts [{:keys [component/id component/target]}]
-  (let [workflow (-> target :result :value)
+(defn props->cytoscape-opts [{:keys [component/id evaluations/link]}]
+  (let [workflow (-> link :workflow :result :value)
         nodes (->> workflow
                    (flatten)
                    (set)
@@ -52,7 +52,7 @@
 (defui Graph
   static om/IQuery
   (query [this]
-    [:component/id :component/type :component/target])
+    [:component/id :component/type :evaluations/link])
     
   Object
   (componentDidMount [this]
@@ -69,5 +69,5 @@
 
 (def graph (om/factory Graph))
 
-(defmethod extensions/component-ui :graph/simple [props]
+(defmethod extensions/component-ui :graph/workflow [props]
   (graph props))

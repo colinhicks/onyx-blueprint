@@ -6,13 +6,12 @@
 (defui Text
   static om/IQuery
   (query [this]
-    [:component/id :component/type :component/content])
+    [:component/id :component/type :content/text])
     
   Object
   (render [this]
-    (let [{:keys [component/content component/type]} (om/props this)
-          {:keys [element]} (om/get-computed this)
-          text (:text content)]
+    (let [{:keys [component/content component/type content/text]} (om/props this)
+          {:keys [element]} (om/get-computed this)]
       (if (coll? text)
         (apply dom/div nil
                (map (partial element #js {:className (name type)})

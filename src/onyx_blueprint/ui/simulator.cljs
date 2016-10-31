@@ -14,23 +14,23 @@
 (defui Simulator
   static om/IQuery
   (query [this]
-    [:component/id :component/type :component/content :component/target])
+    [:component/id :component/type :evaluations/link])
   
   Object
   (render [this]
-    (let [{:keys [component/id component/content component/target] :as props} (om/props this)
-          {:keys [job]} content
-          init-data (-> target :result :value)
-          env-summary (if job (onyx.api/env-summary job))
+    (let [{:keys [component/id evaluations/link] :as props} (om/props this)
+          init-data (-> link :init-data :result :value)
+          job-env (-> link :job-env :result :value)
+          env-summary (if job-env (onyx.api/env-summary job-env))
           transact! (partial om/transact! this)]
       (apply dom/div #js {:id (name id) :className "col component component-editor"}
                (cond-> []
-                 (nil? job)
+                 (nil? job-env)
                  (conj (button "Initialize job"
                                (fn [evt]
                                  (.preventDefault evt)
                                  (transact! `[(onyx/init {:id ~id :job ~init-data})]))))
-                 job
+                 job-env
                  (conj (button "Reinitialize job"
                                (fn [evt]
                                  (.preventDefault evt)

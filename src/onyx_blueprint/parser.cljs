@@ -17,6 +17,14 @@
   (let [target-id (get data key)]
     {:value (get-in @state [:blueprint/evaluations target-id])}))
 
+(defmethod parser-read :evaluations/link
+  [{:keys [state query parser data] :as env} key _]
+  (let [refmap (get data key)]
+    {:value (reduce-kv (fn [m k refid]
+                         (assoc m k (get-in @state [:blueprint/evaluations refid])))
+                       {}
+                       refmap)}))
+
 (defmethod parser-read :row/items
   [{:keys [state query parser data] :as env} key _]
   (let [st @state
@@ -52,32 +60,36 @@
 
 (defmethod parser-mutate 'onyx/init
   [{:keys [state] :as env} key {:keys [id job]}]
-  {:action (fn []
-             (swap! state assoc-in
-                    [:blueprint/components id :component/content :job]
-                    (onyx.api/init job)))})
+  (let [job-env (onyx.api/init job)]
+    {:action (fn []
+               (swap! state assoc-in
+                      [:blueprint/evaluations id]
+                      ;; todo common record with api/evaluate* result
+                      {:component/id id
+                       :result {:value job-env}
+                       :warnings []
+                       :state :success}))}))
 
 (defmethod parser-mutate 'onyx/new-segment
   [{:keys [state] :as env} key {:keys [id]}]
-  {:action (fn []
-             (swap! state update-in
-                    [:blueprint/components id :component/content]
-                    (fn [{:keys [gen-segment] :as content}]
-                      (update-in content [:job]
-                                 #(onyx.api/new-segment % :in (gen-segment))))))})
+  (let [gen-segment (get-in @state [:blueprint/components id :simulator/gen-segment])]
+    {:action (fn []
+               (swap! state update-in
+                      [:blueprint/evaluations id :result :value]
+                      #(onyx.api/new-segment % :in (gen-segment))))}))
 
 (defmethod parser-mutate 'onyx/tick
   [{:keys [state] :as env} key {:keys [id]}]
   {:action (fn []
              (swap! state update-in
-                    [:blueprint/components id :component/content :job]
+                    [:blueprint/evaluations id :result :value]
                     #(onyx.api/tick %)))})
 
 (defmethod parser-mutate 'onyx/drain
   [{:keys [state] :as env} key {:keys [id]}]
   {:action (fn []
              (swap! state update-in
-                    [:blueprint/components id :component/content :job]
+                    [:blueprint/evaluations id :result :value]
                     #(-> %
                          (onyx.api/drain)
                          (onyx.api/stop))))})

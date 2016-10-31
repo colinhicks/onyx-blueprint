@@ -44,7 +44,7 @@
 (defui CodeEditor
     static om/IQuery
     (query [this]
-      [:component/id :component/type :component/content])
+      [:component/id :component/type :content/default-input])
     
     Object
     (componentDidMount [this]
@@ -61,9 +61,9 @@
                                     :blueprint/sections])))))
 
     (render [this]
-      (let [{:keys [component/id component/content] :as props} (om/props this)]
+      (let [{:keys [component/id content/default-input]} (om/props this)]
         (dom/textarea #js {:id (textarea-id id)
-                           :defaultValue (format-default-input (:default-input content))}))))
+                           :defaultValue (format-default-input default-input)}))))
 
 (def code-editor (om/factory CodeEditor))
 

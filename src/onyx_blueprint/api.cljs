@@ -14,8 +14,8 @@
      (cb {:component/id component-id
           :result result
           :state (if (seq (:warnings result))
-                   :compiled-error
-                   :compiled-success)}))))
+                   :error
+                   :success)}))))
 
 (defn io-evaluate [cb {:keys [component-id] :as eval-req}]
   (evaluate* eval-req (fn [result]
@@ -55,29 +55,27 @@
 
 (def run-async! #'cljs.js/run-async!)
 
-(defn eval-default-input! [components done-cb]
-  (let [evaluations (->> components
-                          (filter #(= :editor (keyword (namespace (:component/type %)))))
-                          (map #(vector (:component/id %)
-                                        (get-in % [:component/content :default-input])))
-                          (filter second))
+(defn initial-evaluations! [components done-cb]
+  (let [inits (keep (fn [{:keys [component/id evaluations/init] :as c}]
+                      (when init [id (get c init)]))
+                    components)
         results (atom {})]
     (run-async!
-     (fn [[id default-input] cb]
+     (fn [[id init-input] cb]
        (evaluate* {:component-id id
-                  :script-id (str (name id) "-initial-value")
-                  :source default-input}
-                 (fn [result]
-                   (swap! results assoc-in [id] result)
-                   (cb nil))))
-     evaluations
+                   :script-id (str (name id) "-initial-value")
+                   :source init-input}
+                  (fn [result]
+                    (swap! results assoc-in [id] result)
+                    (cb nil))))
+     inits
      :unused
      (fn [error-result]
        (done-cb @results)))))
 
 (defn render-tutorial! [components sections target-el]
   ;; todo alternative to blocking here?
-  (eval-default-input!
+  (initial-evaluations!
    components
    (fn [evaluations]
      (let [init-data {:blueprint/sections (into-tree components sections)}
