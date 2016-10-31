@@ -73,22 +73,25 @@
      (fn [error-result]
        (done-cb @results)))))
 
-(defn render-tutorial! [components sections target-el]
-  ;; todo alternative to blocking here?
-  (initial-evaluations!
-   components
-   (fn [evaluations]
-     (let [init-data {:blueprint/sections (into-tree components sections)}
-           normalized-data (assoc (om/tree->db ui/Tutorial init-data true)
-                                  :blueprint/evaluations evaluations)
-           reconciler (om/reconciler
-                       {:state (atom normalized-data)
-                        :parser (om/parser {:read extensions/parser-read
-                                            :mutate extensions/parser-mutate})
-                        :send io
-                        :merge-tree merge-tree
-                        :remotes [:evaluate]})]
+(defn render-tutorial!
+  ([components sections target-el]
+   (render-tutorial! components sections {} target-el))
+  ([components sections {:keys [custom-component-queries] :as opts} target-el]
+   ;; todo alternative to blocking here?
+   (initial-evaluations!
+    components
+    (fn [evaluations]
+      (binding [extensions/*custom-component-queries* custom-component-queries]
+        (let [init-data {:blueprint/sections (into-tree components sections)}
+              normalized-data (assoc (om/tree->db ui/Tutorial init-data true)
+                                     :blueprint/evaluations evaluations)
+              reconciler (om/reconciler
+                          {:state (atom normalized-data)
+                           :parser (om/parser {:read extensions/parser-read
+                                               :mutate extensions/parser-mutate})
+                           :send io
+                           :merge-tree merge-tree
+                           :remotes [:evaluate]})]
 
-       ;;(pprint/pprint @reconciler)
-
-       (om/add-root! reconciler ui/Tutorial target-el)))))
+          ;;(pprint/pprint @reconciler)
+          (om/add-root! reconciler ui/Tutorial target-el)))))))

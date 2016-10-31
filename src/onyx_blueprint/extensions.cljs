@@ -3,6 +3,8 @@
             [om.next :as om]
             [om.dom :as dom]))
 
+(def ^:dynamic *custom-component-queries* {})
+
 (defmulti component-ui (fn [props] (:component/type props)))
 
 (defmethod component-ui :default [props]

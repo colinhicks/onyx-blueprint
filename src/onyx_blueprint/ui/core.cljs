@@ -15,10 +15,11 @@
 
     static om/IQuery
     (query [this]
-      {:text (om/get-query Text)
-       :graph (om/get-query Graph)
-       :editor (om/get-query CodeEditor)
-       :simulator (om/get-query Simulator)})
+      (merge {:text (om/get-query Text)
+              :graph (om/get-query Graph)
+              :editor (om/get-query CodeEditor)
+              :simulator (om/get-query Simulator)}
+             extensions/*custom-component-queries*))
 
     Object
     (render [this]
