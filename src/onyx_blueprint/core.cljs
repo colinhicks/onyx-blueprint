@@ -20,6 +20,7 @@
    {:component/id ::workflow-ex1-data
     :component/type :editor/data-structure
     :evaluations/init :content/default-input
+    :evaluations/validate-spec :onyx.core/workflow
     :content/default-input [[:input :increment] [:increment :output]]}
 
    {:component/id ::workflow-ex1-graph
@@ -29,6 +30,7 @@
    {:component/id ::workflow-ex2-data
     :component/type :editor/data-structure
     :evaluations/init :content/default-input
+    :evaluations/validate-spec :onyx.core/workflow
     :content/default-input [[:input :processing-1]
                               [:input :processing-2]
                               [:processing-1 :output-1]

@@ -1,5 +1,6 @@
 (ns onyx-blueprint.ui.core
-  (:require [goog.dom :as gdom]
+  (:require [cljs.pprint :as pprint]
+            [goog.dom :as gdom]
             [om.dom :as dom]
             [om.next :as om :refer-macros [defui]]
             [onyx-blueprint.extensions :as extensions]
@@ -27,6 +28,9 @@
 
 (def component (om/factory TutorialComponent))
 
+(defmethod extensions/component-ui :default [props]
+  (dom/pre nil (with-out-str (pprint/pprint props))))
+
 (defui Section
     static om/IQuery
     (query [this]
@@ -52,3 +56,4 @@
     (render [this]
       (let [{:keys [blueprint/sections] :as props} (om/props this)]
         (apply dom/div nil (mapv section sections)))))
+

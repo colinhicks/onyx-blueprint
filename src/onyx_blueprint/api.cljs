@@ -4,24 +4,26 @@
             [onyx-blueprint.extensions :as extensions]
             [onyx-blueprint.ui.core :as ui]
             [onyx-blueprint.parser]
-            [onyx-blueprint.self-host :as self-host]))
+            [onyx-blueprint.self-host :as self-host]
+            [onyx-blueprint.validation]))
 
-(defn evaluate* [{:keys [source script-id component-id]} cb]
+(defn evaluate* [{:keys [source script-id component-id validate-spec]} cb]
   (self-host/eval-str
    (str source)
    script-id
    (fn [result]
-     (cb {:component/id component-id
-          :result result
-          :state (if (seq (:warnings result))
-                   :error
-                   :success)}))))
+     (let [^boolean success? (not (seq (:warnings result)))]
+       (cb {:component/id component-id
+            :result result
+            :state (if success? :success :error)
+            :validation (if (and success? validate-spec)
+                          (extensions/validate validate-spec (:value result)))})))))
 
 (defn io-evaluate [cb {:keys [component-id] :as eval-req}]
-  (evaluate* eval-req (fn [result]
+  (evaluate* eval-req (fn [evaluation]
                        ;; todo: is there a better way to do this?
                        (cb {:onyx-blueprint/merge-in
-                            {:content result
+                            {:content evaluation
                              :keypath [:blueprint/evaluations component-id]}}))))
 
 (defn io [{:keys [evaluate]} cb]

@@ -57,10 +57,10 @@
         ;; todo debounce
         (.on cm "change"
              (fn []
-               (om/transact! this `[(editor/eval {:type :onyx/fn
-                                                  :source ~(.getValue cm)
-                                                  :component-id ~id
-                                                  :script-id "user-input"})
+               (om/transact! this `[(evaluations/evaluate {:type :onyx/fn
+                                                           :source ~(.getValue cm)
+                                                           :component-id ~id
+                                                           :script-id "user-input"})
                                     :blueprint/sections])))))
 
     (render [this]

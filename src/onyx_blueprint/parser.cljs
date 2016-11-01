@@ -46,17 +46,19 @@
 (defmethod parser-read :section/rows
   [{:keys [state query parser sections data] :as env} key _]
   (let [rows (get data key)]
-    {:value (mapv (partial doparse parser env query) rows)}))
+    {:value (into [] (map (partial doparse parser env query) rows))}))
 
 (defmethod parser-read :blueprint/sections
   [{:keys [state query parser] :as env} key params]
   (let [st @state
         sections (get st key)]
-    {:value (mapv (partial doparse parser env query) sections)}))
+    {:value (into [] (map (partial doparse parser env query) sections))}))
 
-(defmethod parser-mutate 'editor/eval
-  [{:keys [state] :as env} key {:keys [type source script-id component-id] :as params}]
-  {:evaluate true})
+(defmethod parser-mutate 'evaluations/evaluate
+  [{:keys [state ast] :as env} key {:keys [component-id] :as params}]
+  (let [validate-spec
+        (get-in @state [:blueprint/components component-id :evaluations/validate-spec])]
+    {:evaluate (update-in ast [:params] #(assoc % :validate-spec validate-spec))}))
 
 (defmethod parser-mutate 'onyx/init
   [{:keys [state] :as env} key {:keys [id job]}]
