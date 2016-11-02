@@ -1,5 +1,5 @@
-/resources/public/js/compiled/**
-!/resources/public/js/compiled/onyx_blueprint.js
+/resources/public/example/js/**
+!/resources/public/example/js/showcase.js
 figwheel_server.log
 pom.xml
 *jar

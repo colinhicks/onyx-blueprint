@@ -1,4 +1,4 @@
-(ns onyx-blueprint.core
+(ns example.showcase
   (:require [goog.dom :as gdom]
             [onyx-blueprint.api :as api]))
 
