@@ -25,6 +25,9 @@
 (defmethod extensions/component-ui :text/header [props]
   (text (om/computed props {:element dom/h2})))
 
+(defmethod extensions/component-ui :text/sub-header [props]
+  (text (om/computed props {:element dom/h4})))
+
 (defmethod extensions/component-ui :text/body [props]
   (text (om/computed props {:element dom/p})))
 

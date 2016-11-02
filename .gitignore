@@ -1,5 +1,5 @@
 /resources/public/example/js/**
-!/resources/public/example/js/showcase.js
+/resources/public/tutorial/js/**
 figwheel_server.log
 pom.xml
 *jar
