@@ -7,8 +7,14 @@
 
 
 (defn render-hiccup [{:keys [content/hiccup] :as props}]
-  ;; todo css classes
-  (html hiccup))
+  (let [css-classes (helpers/component-css-classes props)
+        [first-child maybe-attr & children] hiccup
+        hiccup' (if (map? maybe-attr)
+                  (into [first-child (assoc maybe-attr :class css-classes)]
+                        children)
+                  (into [first-child {:class css-classes}]
+                        (into [maybe-attr] children)))]
+    (html hiccup')))
 
 (defn render-element [{:keys [content/tag content/text] :as props}]
   (let [el

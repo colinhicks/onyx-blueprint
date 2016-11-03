@@ -17,13 +17,19 @@
   (let [target-id (get data key)]
     {:value (get-in @state [:blueprint/evaluations target-id])}))
 
+(defn resolve-evaluations [link state]
+  (reduce-kv (fn [m k linkref]
+               (if (map? linkref)
+                 (assoc m k (resolve-evaluations linkref state))
+                 (assoc m k (get-in state [:blueprint/evaluations linkref]))))
+             {}
+             link))
+
 (defmethod parser-read :evaluations/link
   [{:keys [state query parser data] :as env} key _]
-  (let [refmap (get data key)]
-    {:value (reduce-kv (fn [m k refid]
-                         (assoc m k (get-in @state [:blueprint/evaluations refid])))
-                       {}
-                       refmap)}))
+  (let [link (get data key)
+        st @state]
+    {:value (resolve-evaluations link @state)}))
 
 (defmethod parser-read :row/items
   [{:keys [state query parser data] :as env} key _]
@@ -95,3 +101,18 @@
                     #(-> %
                          (onyx.api/drain)
                          (onyx.api/stop))))})
+
+(defmethod parser-mutate 'onyx/batch-drain
+  [{:keys [state] :as env} key {:keys [id input-task input-batch]}]
+  {:action (fn []
+             (swap! state update-in
+                    [:blueprint/evaluations id :result :value]
+                    (fn [job-env]
+                      (let [hydrated-env (reduce (fn [j seg]
+                                                   (onyx.api/new-segment j input-task seg))
+                                                 job-env
+                                                 input-batch)
+                            _ (println "zzzz" (onyx.api/env-summary hydrated-env))]
+                        (-> hydrated-env
+                            (onyx.api/drain)
+                            (onyx.api/stop))))))})

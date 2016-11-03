@@ -1,0 +1,19 @@
+.row {
+  display: inline-block;
+  clear: both;
+  float: left;
+}
+
+.col {
+  float: left;
+}
+
+.component-editor {
+  height: auto;
+}
+
+.component-graph {
+  min-width: 300px;
+  min-height: 300px;
+  height: auto;
+}
