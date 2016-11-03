@@ -5,9 +5,9 @@
             [om.next :as om :refer-macros [defui]]
             [onyx-blueprint.extensions :as extensions]
             [onyx-blueprint.ui.code-editor :refer [CodeEditor]]
-            [onyx-blueprint.ui.simulator :refer [Simulator]]
-            [onyx-blueprint.ui.text :refer [Text]]
-            [onyx-blueprint.ui.graph :refer [Graph]]))
+            [onyx-blueprint.ui.graph :refer [Graph]]
+            [onyx-blueprint.ui.html :refer [Html]]
+            [onyx-blueprint.ui.simulator :refer [Simulator]]))
 
 (defui TutorialComponent
     static om/Ident
@@ -16,7 +16,7 @@
 
     static om/IQuery
     (query [this]
-      (merge {:text (om/get-query Text)
+      (merge {:html (om/get-query Html)
               :graph (om/get-query Graph)
               :editor (om/get-query CodeEditor)
               :simulator (om/get-query Simulator)}

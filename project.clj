@@ -3,12 +3,13 @@
   :url "https://github.com/onyx-platform/onyx-blueprint"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-
+xxxxxxxxxxxxxxxxxxxxx
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.293"]
                  [org.onyxplatform/onyx-local-rt "0.9.11.0"]
                  [org.omcljs/om "1.0.0-alpha47"]
-                 [cljsjs/codemirror "5.19.0-0"]]
+                 [cljsjs/codemirror "5.19.0-0"]
+                 [sablono "0.7.5"]]
 
   :plugins [[lein-figwheel "0.5.8"]
             [lein-cljsbuild "1.1.4" :exclusions [[org.clojure/clojure]]]]
