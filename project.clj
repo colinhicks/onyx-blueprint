@@ -52,7 +52,14 @@
                            :output-to "resources/public/tutorial/js/tutorial.js"
                            :output-dir "resources/public/tutorial/js/out"
                            :source-map-timestamp true
-                           :preloads [devtools.preload]}}]}
+                           :preloads [devtools.preload]}}
+
+               {:id "tutorial-min"
+                :source-paths ["src" "tutorial_src"]
+                :compiler {:output-to "resources/public/tutorial/js/tutorial.js"
+                           :main onyx-tutorial.core
+                           :optimizations :simple
+                           :pretty-print false}}]}
 
   :figwheel {:css-dirs ["resources/public/css"]}
 
