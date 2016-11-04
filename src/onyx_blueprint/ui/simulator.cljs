@@ -58,33 +58,20 @@
                              (:init-data link))
         job-env (-> link :job-env :result :value)
         env-summary (if job-env (onyx.api/env-summary job-env))
-        input-task (-> init-data :workflow ffirst)
         input-batch (-> link :input-segments :result :value)
         outputs (-> env-summary
                      :tasks
                      (get (second (last (:workflow init-data))))
                      :outputs)
         transact! (partial om/transact! component)]
-    (apply dom/div #js {:id (name id) :className (helpers/component-css-classes props)}
-           (cond-> []
-             (nil? job-env)
-             (conj (button "Initialize job"
-                           (fn [evt]
-                             (.preventDefault evt)
-                             (transact! `[(onyx/init {:id ~id :job ~init-data})]))))
-
-             job-env
-             (conj (button "Reset job"
-                           (fn [evt]
-                             (.preventDefault evt)
-                             (transact! `[(onyx/init {:id ~id :job ~init-data})])))
-                   (button "Process input batch"
-                           (fn [evt]
-                             (.preventDefault evt)
-                             (transact! `[(onyx/batch-drain {:id ~id
-                                                             :input-task ~input-task
-                                                             :input-batch ~input-batch})])))
-                   (dom/pre nil (with-out-str (pprint/pprint outputs))))))))
+    (dom/div #js {:id (name id) :className (helpers/component-css-classes props)}
+             (button "Process input"
+                     (fn [evt]
+                       (.preventDefault evt)
+                       (transact! `[(onyx/init+batch+drain {:id ~id
+                                                       :job ~init-data
+                                                       :input-batch ~input-batch})])))
+             (dom/pre nil (with-out-str (pprint/pprint outputs))))))
 
 (defui Simulator
   static om/IQuery

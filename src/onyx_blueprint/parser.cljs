@@ -66,6 +66,12 @@
         (get-in @state [:blueprint/components component-id :evaluations/validate-spec])]
     {:evaluate (update-in ast [:params] #(assoc % :validate-spec validate-spec))}))
 
+(defn job-evaluation [id job-env]
+  {:component/id id
+   :result {:value job-env}
+   :warnings []
+   :state :success})
+
 (defmethod parser-mutate 'onyx/init
   [{:keys [state] :as env} key {:keys [id job]}]
   (let [job-env (onyx.api/init job)]
@@ -73,10 +79,7 @@
                (swap! state assoc-in
                       [:blueprint/evaluations id]
                       ;; todo common record with api/evaluate* result
-                      {:component/id id
-                       :result {:value job-env}
-                       :warnings []
-                       :state :success}))}))
+                      (job-evaluation id job-env)))}))
 
 (defmethod parser-mutate 'onyx/new-segment
   [{:keys [state] :as env} key {:keys [id]}]
@@ -102,17 +105,17 @@
                          (onyx.api/drain)
                          (onyx.api/stop))))})
 
-(defmethod parser-mutate 'onyx/batch-drain
-  [{:keys [state] :as env} key {:keys [id input-task input-batch]}]
-  {:action (fn []
-             (swap! state update-in
-                    [:blueprint/evaluations id :result :value]
-                    (fn [job-env]
-                      (let [hydrated-env (reduce (fn [j seg]
-                                                   (onyx.api/new-segment j input-task seg))
-                                                 job-env
-                                                 input-batch)
-                            _ (println "zzzz" (onyx.api/env-summary hydrated-env))]
-                        (-> hydrated-env
-                            (onyx.api/drain)
-                            (onyx.api/stop))))))})
+(defmethod parser-mutate 'onyx/init+batch+drain
+  [{:keys [state] :as env} key {:keys [id job input-batch]}]
+  (let [input-task (-> job :workflow ffirst)
+        hydrated-env (reduce (fn [j seg]
+                               (onyx.api/new-segment j input-task seg))
+                             (onyx.api/init job)
+                             input-batch)
+        job-env (-> hydrated-env
+                    (onyx.api/drain)
+                    (onyx.api/stop))]
+    {:action (fn []
+               (swap! state assoc-in
+                      [:blueprint/evaluations id]
+                      (job-evaluation id job-env)))}))
