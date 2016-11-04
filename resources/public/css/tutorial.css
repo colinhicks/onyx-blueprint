@@ -1,12 +1,63 @@
+/* normalization
+todo: normalize.css? */
+
+pre {margin: 0;}
+
+/* tutorial base */
+
+body {
+  font-family: "Noto Serif", "DejaVu Serif", serif;
+  margin: 0 1em;
+}
+
+p {
+  line-height: 1.4em;
+}
+
+h2 {
+  margin: 0 0 -0.5em 0;  /*temporary*/
+  padding: 0;
+}
+
 .row {
-  display: inline-block;
-  clear: both;
-  float: left;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 0.75em;
 }
 
 .col {
-  float: left;
+  flex: 1 1 100%;
 }
+
+.col-shrink-2 {
+  flex-shrink: 2;
+}
+
+.col-shrink-3 {
+  flex-shrink: 3;
+}
+
+.col-shrink-4 {
+  flex-shrink: 4;
+}
+
+.col-shrink-5 {
+  flex-shrink: 5;
+}
+
+.col-center {
+  text-align: center;
+}
+
+aside.col {
+  font-size: 90%;
+  color: #666;
+  margin-left: auto;
+  padding-left: 1em;
+  flex: 0 0 25%;
+}
+
+/* component-specific */
 
 .component-editor {
   height: auto;
@@ -16,4 +67,50 @@
   min-width: 300px;
   min-height: 300px;
   height: auto;
+}
+
+.component-graph.graph-height-med {
+  min-height: 500px;
+}
+
+em.col {
+  text-decoration: underline;
+  color: #666;
+}
+
+/* example workflow simulator */
+
+#in-action-input-segments-textarea-editor:before {
+  content: "Input";
+  text-decoration: underline;
+  display: block;  
+}
+
+#in-action-simulator {
+  display: flex;
+}
+
+#in-action-simulator input {
+  margin: 6em 5em 0 0;
+}
+
+#in-action-simulator pre:before {
+  content: "Output";
+  text-decoration: underline;
+  margin: 0 0 3px 0;
+  display: block;
+}
+
+#in-action-simulator pre {
+    flex: 1;
+}
+
+/* misc */
+
+#app .loading {
+  font-family: sans-serif;
+  color: white;
+  background-color: blue;
+  padding: 5px 10px;
+  border-radius: 3px;
 }

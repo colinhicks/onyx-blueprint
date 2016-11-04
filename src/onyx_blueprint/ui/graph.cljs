@@ -31,7 +31,8 @@
     {:container (gdom/getElement (graph-id id))
      :elements (into nodes edges)
      :style [{:selector "node"
-              :style {:background-color "#666"
+              :style {:background-color "#4d6884"
+                      :font-family "Noto Serif, DejaVu Serif, serif"
                       :label "data(id)"}}
              {:selector "edge"
               :style {:width 3
@@ -40,7 +41,7 @@
                       :target-arrow-shape "triangle"}}]
      :layout {:name "breadthfirst"
               :directed true
-              :animate true}
+              :padding 10}
      :userZoomingEnabled false
      :userPanningEnabled false}))
 

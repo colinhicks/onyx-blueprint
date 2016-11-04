@@ -46,12 +46,15 @@
 (defui CodeEditor
     static om/IQuery
     (query [this]
-      [:component/id :component/type :content/default-input :layout/hints])
+      [:component/id :component/type :content/read-only? :content/default-input :layout/hints])
     
     Object
     (componentDidMount [this]
-      (let [{:keys [component/id] :as props} (om/props this)
+      (let [{:keys [component/id content/read-only?] :as props} (om/props this)
             {:keys [editor/codemirror-opts]} (om/get-computed this)
+            codemirror-opts (if read-only?
+                              (assoc codemirror-opts :readOnly true)
+                              codemirror-opts)
             css-classes (helpers/component-css-classes props)
             cm (editor (textarea-id id) codemirror-opts css-classes)]
         ;; todo debounce
