@@ -16,12 +16,12 @@
 
   :source-paths ["src" "example_src" "tutorial_src"]
 
-  :clean-targets ^{:protect false} ["resources/public/js/compiled"
-                                    "resources/public/example/js"
+  :clean-targets ^{:protect false} ["resources/public/example/js"
                                     "resources/public/tutorial/js"
                                     "target"]
 
   :cljsbuild {:builds
+              ;; a showcase of available components
               [{:id "showcase-dev"
                 :source-paths ["src" "example_src"]
 
@@ -33,33 +33,31 @@
                            :output-dir "resources/public/example/js/out"
                            :source-map-timestamp true
                            :preloads [devtools.preload]}}
-               
-               {:id "showcase-min"
-                :source-paths ["src" "example_src"]
-                :compiler {:output-to "resources/public/example/js/showcase.js"
-                           :main example.showcase
-                           :optimizations :simple
-                           :pretty-print false}}
 
-               ;; temporary: to be moved to separate repo
-               {:id "tutorial-dev"
+               ;; the combined tutorial build with code-splitting
+               {:id "tutorial-all"
+                :source-paths ["src" "tutorial_src"]
+                :compiler {:output-dir "resources/public/tutorial/js"
+                           :optimizations :simple
+                           :pretty-print false
+                           :modules {:common {:output-to "resources/public/tutorial/js/common.js"
+                                              :entries #{"onyx-tutorial.core"}}
+                                     :workflow {:output-to "resources/public/tutorial/js/workflow.js"
+                                                :entries #{"onyx-tutorial.workflow-basics"}
+                                                :depends-on #{:common}}}}}
+
+               ;; the "workflow" topic
+               {:id "workflow-dev"
                 :source-paths ["src" "tutorial_src"]
 
-                :figwheel {:open-urls ["http://localhost:3449/tutorial.html"]}
+                :figwheel {:open-urls ["http://localhost:3449/workflow.html"]}
 
-                :compiler {:main onyx-tutorial.core
+                :compiler {:main onyx-tutorial.workflow
                            :asset-path "tutorial/js/out"
-                           :output-to "resources/public/tutorial/js/tutorial.js"
+                           :output-to "resources/public/tutorial/js/workflow.js"
                            :output-dir "resources/public/tutorial/js/out"
                            :source-map-timestamp true
-                           :preloads [devtools.preload]}}
-
-               {:id "tutorial-min"
-                :source-paths ["src" "tutorial_src"]
-                :compiler {:output-to "resources/public/tutorial/js/tutorial.js"
-                           :main onyx-tutorial.core
-                           :optimizations :simple
-                           :pretty-print false}}]}
+                           :preloads [devtools.preload]}}]}
 
   :figwheel {:css-dirs ["resources/public/css"]}
 
