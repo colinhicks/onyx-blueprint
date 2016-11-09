@@ -25,7 +25,7 @@
               [{:id "showcase-dev"
                 :source-paths ["src" "example_src"]
 
-                :figwheel {:open-urls ["http://localhost:3449/index.html"]}
+                :figwheel {:open-urls ["http://localhost:3449/showcase.html"]}
 
                 :compiler {:main example.showcase
                            :asset-path "example/js/out"

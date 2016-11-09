@@ -8,6 +8,10 @@
   float: left;
 }
 
+p.component-html-element {
+  clear: both;
+}
+
 .component-editor {
   height: auto;
 }
@@ -16,4 +20,16 @@
   min-width: 300px;
   min-height: 300px;
   height: auto;
+}
+
+aside, blockquote {
+  padding: 1em;
+}
+
+aside {
+  background-color: #fdf3db;
+}
+
+blockquote {
+  background-color: #eee;
 }
