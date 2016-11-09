@@ -2,7 +2,7 @@
 
 For the moment, this repository supports a few aspects: the development of Onyx tutorial content, a set of components used to make that content interactive, plus the engine that drives the rendering and layout of those components.
 
-In the future, __much will change__. See issues #1 and #7.
+In the future, __much will change__. See issues [#1](https://github.com/colinhicks/onyx-blueprint/issues/1) and [#7](https://github.com/colinhicks/onyx-blueprint/issues/7).
 
 #### Current anatomy
 
