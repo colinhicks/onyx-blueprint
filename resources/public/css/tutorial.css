@@ -73,38 +73,6 @@ aside.col {
   min-height: 500px;
 }
 
-em.col {
-  text-decoration: underline;
-  color: #666;
-}
-
-/* example workflow simulator */
-
-#in-action-input-segments-textarea-editor:before {
-  content: "Input";
-  text-decoration: underline;
-  display: block;  
-}
-
-#in-action-simulator {
-  display: flex;
-}
-
-#in-action-simulator input {
-  margin: 6em 5em 0 0;
-}
-
-#in-action-simulator pre:before {
-  content: "Output";
-  text-decoration: underline;
-  margin: 0 0 3px 0;
-  display: block;
-}
-
-#in-action-simulator pre {
-    flex: 1;
-}
-
 /* misc */
 
 #app .loading {
