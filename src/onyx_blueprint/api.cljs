@@ -55,7 +55,7 @@
                                    (map
                                     (fn [{:keys [key params]}]
                                       (if-let [component (some
-                                                          #(when (= key (:component/id %)) %)
+                                                          #(when (keyword-identical? key (:component/id %)) %)
                                                           components)]
                                         (assoc component
                                                :section/id id

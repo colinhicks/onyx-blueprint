@@ -1,0 +1,17 @@
+.row {
+  display: inline-block;
+  clear: both;
+  float: left;
+}
+
+.col {
+  float: left;
+}
+
+p.component-html-element {
+  clear: both;
+}
+
+.component-editor {
+  height: auto;
+}

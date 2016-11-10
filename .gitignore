@@ -1,4 +1,5 @@
 /resources/public/example/js/**
+/resources/public/example/simulator/js/**
 /resources/public/tutorial/js/**
 !/resources/public/tutorial/js/tutorial.js
 figwheel_server.log

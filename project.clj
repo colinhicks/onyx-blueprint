@@ -9,6 +9,7 @@
                  [org.onyxplatform/onyx-local-rt "0.9.11.0"]
                  [org.omcljs/om "1.0.0-alpha47"]
                  [cljsjs/codemirror "5.19.0-0"]
+                 [cljsjs/vis "4.16.1-0"]
                  [sablono "0.7.5"]]
 
   :plugins [[lein-figwheel "0.5.8"]
@@ -17,6 +18,7 @@
   :source-paths ["src" "example_src" "tutorial_src"]
 
   :clean-targets ^{:protect false} ["resources/public/example/js"
+                                    "resources/public/example/simulator/js"
                                     "resources/public/tutorial/js"
                                     "target"]
 
@@ -31,6 +33,18 @@
                            :asset-path "example/js/out"
                            :output-to "resources/public/example/js/showcase.js"
                            :output-dir "resources/public/example/js/out"
+                           :source-map-timestamp true
+                           :preloads [devtools.preload]}}
+
+               {:id "showcase-simulator-dev"
+                :source-paths ["src" "example_src"]
+
+                :figwheel {:open-urls ["http://localhost:3449/showcase-simulator.html"]}
+
+                :compiler {:main example.simulator
+                           :asset-path "example/simulator/js/out"
+                           :output-to "resources/public/example/simulator/js/simulator.js"
+                           :output-dir "resources/public/example/simulator/js/out"
                            :source-map-timestamp true
                            :preloads [devtools.preload]}}
 
