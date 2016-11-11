@@ -8,6 +8,7 @@
   [{:component/id ::workflow
     :component/type :editor/data-structure
     :evaluations/init :content/default-input
+    :evaluations/validate-spec :onyx.core/workflow
     :content/label "Workflow"
     :content/default-input [[:read-input :increment-n]
                             [:increment-n :square-n]
@@ -22,6 +23,7 @@
    {:component/id ::catalog
     :component/type :editor/data-structure
     :evaluations/init :content/default-input
+    :evaluations/validate-spec :onyx.core/catalog
     :content/label "Catalog"
     :content/default-input [{:onyx/name :read-input
                              :onyx/type :input
@@ -74,12 +76,22 @@
     :component/type :job-inspector/default
     :content/label "Task status"
     :link/evaluations {:job-env ::simulator}
-    :link/ui-state {:graph ::graph}}])
+    :link/ui-state {:graph ::graph}}
+
+   {:component/id ::auditor
+    :component/type :auditor/default
+    :content/label "Code analysis"
+    :link/evaluations {:workflow ::workflow
+                       :catalog ::catalog
+                       :functions ::fns
+                       :input-segments ::input-segments}}])
 
 (def sections
   [{:section/id ::graph-example
-    :section/layout ['[::workflow (::graph {:graph-direction "LR"}) ::inspector]
+    :section/layout [[::auditor]
+                     '[::workflow (::graph {:graph-direction "LR"}) ::inspector]
                      [::simulator]
-                     [::input-segments ::catalog ::fns]]}])
+                     [::input-segments ::catalog ::fns]
+                     ]}])
 
 (api/render-tutorial! components sections (gdom/getElement "app"))

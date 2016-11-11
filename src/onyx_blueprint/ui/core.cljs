@@ -9,7 +9,8 @@
             [onyx-blueprint.ui.graph :refer [Graph]]
             [onyx-blueprint.ui.html :refer [Html]]
             [onyx-blueprint.ui.simulator :refer [Simulator]]
-            [onyx-blueprint.ui.job-inspector :refer [JobInspector]]))
+            [onyx-blueprint.ui.job-inspector :refer [JobInspector]]
+            [onyx-blueprint.ui.auditor :refer [Auditor]]))
 
 (defui TutorialComponent
     static om/Ident
@@ -22,7 +23,8 @@
               :graph (om/get-query Graph)
               :editor (om/get-query CodeEditor)
               :simulator (om/get-query Simulator)
-              :job-inspector (om/get-query JobInspector)}
+              :job-inspector (om/get-query JobInspector)
+              :auditor (om/get-query Auditor)}
              extensions/*custom-component-queries*))
 
     Object

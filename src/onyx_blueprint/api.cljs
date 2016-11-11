@@ -12,7 +12,7 @@
    (str source)
    script-id
    (fn [result]
-     (let [^boolean success? (not (seq (:warnings result)))]
+     (let [^boolean success? (not (:error result))]
        (cb {:component/id component-id
             :result result
             :state (if success? :success :error)
