@@ -14,7 +14,6 @@
    
    {:component/id ::graph
     :component/type :graph/workflow
-    :content/graph-direction "LR"
     :evaluations/link {:workflow ::workflow
                        :simulator ::simulator}}
 
@@ -42,19 +41,36 @@
     :content/default-input
     "(defn ^:export increment-n [segment] (update-in segment [:n] inc))
 (defn ^:export square-n [segment] (update-in segment [:n] (partial * (:n segment))))"}
+
+   {:component/id ::input-segments
+    :component/type :editor/data-structure
+    :evaluations/init :content/default-input
+    :content/default-input [{:n 0}
+                            {:n 1}
+                            {:n 2}
+                            {:n 3}
+                            {:n 4}
+                            {:n 5}
+                            {:n 6}
+                            {:n 7}
+                            {:n 8}
+                            {:n 9}]}
    
    {:component/id ::simulator
     :component/type :simulator/default
-    :evaluations/link {:workflow ::workflow
-                       :catalog ::catalog}
+    :content/controls [:initialize :next-tick :next-batch :run-to-completion]
+    :evaluations/link {:job-env ::simulator
+                       :workflow ::workflow
+                       :catalog ::catalog
+                       :input-segments ::input-segments}
 
     
     }])
 
 (def sections
   [{:section/id ::graph-example
-    :section/layout [[::graph]
-                     [::workflow ::catalog ::fns]
+    :section/layout ['[(::graph {:graph-direction "LR"})]
+                     [::workflow ::catalog ::input-segments ::fns]
                      [::simulator]]}])
 
 (api/render-tutorial! components sections (gdom/getElement "app"))

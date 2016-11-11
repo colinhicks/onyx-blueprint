@@ -9,10 +9,11 @@
 
 
 
-(defn vis-opts [{:keys [content/graph-direction content/graph-selectable]
-                 :or {graph-direction "UD"
-                      graph-selectable true}}]
-  (let [opts {:edges {:arrows "to"}
+(defn vis-opts [props]
+  (let [{:keys [graph-direction graph-selectable]
+         :or {graph-direction "UD"
+              graph-selectable true}} (:layout/hints props)
+        opts {:edges {:arrows "to"}
               :layout {:hierarchical {:enabled true
                                       :sortMethod "directed"
                                       :direction graph-direction}}

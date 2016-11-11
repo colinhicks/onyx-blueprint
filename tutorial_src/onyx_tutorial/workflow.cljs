@@ -65,8 +65,8 @@
 
    {:component/id ::in-action-simulator
     :component/type :simulator/batch-outputs
-    :evaluations/link {:init-data {:workflow ::graph-data
-                                   :catalog ::in-action-catalog}
+    :evaluations/link {:workflow ::graph-data
+                       :catalog ::in-action-catalog
                        :job-env ::in-action-simulator
                        :user-fn ::in-action-fns
                        :input-segments ::in-action-input-segments}}

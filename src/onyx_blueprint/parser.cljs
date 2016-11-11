@@ -72,9 +72,19 @@
    :warnings []
    :state :success})
 
+(defn add-segments [job-env task segments]
+  (reduce (fn [je seg]
+            (onyx.api/new-segment je task seg))
+          job-env
+          segments))
+
 (defmethod parser-mutate 'onyx/init
-  [{:keys [state] :as env} key {:keys [id job]}]
-  (let [job-env (onyx.api/init job)]
+  [{:keys [state] :as env} key {:keys [id job input-segments]}]
+  (let [job-env (if (seq input-segments)
+                  (add-segments (onyx.api/init job)
+                                (-> job :workflow ffirst)
+                                input-segments)
+                  (onyx.api/init job))]
     {:action (fn []
                (swap! state assoc-in
                       [:blueprint/evaluations id]
@@ -95,6 +105,20 @@
              (swap! state update-in
                     [:blueprint/evaluations id :result :value]
                     #(onyx.api/tick %)))})
+
+(defmethod parser-mutate 'onyx/next-batch
+  [{:keys [state] :as env} key {:keys [id]}]
+  {:action (fn []
+             (swap! state update-in
+                    [:blueprint/evaluations id :result :value]
+                    (fn [job-env]
+                      (loop [jenv job-env
+                             action (:next-action job-env)]
+                        (if (or (keyword-identical? :lifecycle/after-batch action)
+                                (onyx.api/drained? jenv))
+                          jenv
+                          (recur (onyx.api/tick jenv)
+                                 (:next-action jenv)))))))})
 
 (defmethod parser-mutate 'onyx/drain
   [{:keys [state] :as env} key {:keys [id]}]
