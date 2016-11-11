@@ -15,12 +15,13 @@
              (if ^boolean status
                (dom/pre #js {:className "code"}
                         (with-out-str (pprint/pprint status)))
-               (dom/span #js {:className "advice"} "No data. Is the job initialized?")))))
+               (dom/div #js {:className "advice"} "No data. Is the job initialized?")))))
 
 (defui JobInspector
   static om/IQuery
   (query [this]
-    [:component/id :component/type :link/evaluations :link/ui-state :layout/hints])
+    [:component/id :component/type :content/label
+     :link/evaluations :link/ui-state :layout/hints])
   
   Object
   (render [this]
@@ -32,9 +33,10 @@
       (dom/div #js {:id (helpers/component-id props)
                     :className (str (helpers/component-css-classes props)
                                     (when-not no-graph-selection? " selected-graph"))}
+               (helpers/label props)
                (case (:action graph-state)
                  (nil :deselect-tasks)
-                 (dom/span #js {:className "advice"} "Select a task on the graph.")
+                 (dom/div #js {:className "advice"} "Select a task on the graph.")
 
                  :select-tasks
                  (selected-task-status graph-state evaluations)

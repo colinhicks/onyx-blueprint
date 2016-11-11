@@ -7,10 +7,11 @@
             [onyx-blueprint.ui.helpers :as helpers]))
 
 
-(defn button [label cb]
+(defn button [label css-class cb]
   (dom/input #js {:value label
                   :type "button"
-                  :onClick cb}))
+                  :onClick cb
+                  :className css-class}))
 
 ;; todo handle malformed data
 (defn init-data [{:keys [workflow catalog job]}]
@@ -20,8 +21,8 @@
      :catalog (-> catalog :result :value)}))
 
 ;; todo handle malformed data
-(defn input-segments [link]
-  (-> link
+(defn input-segments [evaluations]
+  (-> evaluations
       :input-segments
       :result
       :value))
@@ -29,48 +30,64 @@
 (defui Simulator
   static om/IQuery
   (query [this]
-    [:component/id :component/type :content/controls :evaluations/link :layout/hints])
+    [:component/id :component/type :content/label
+     :content/controls :link/evaluations :layout/hints])
   
   Object
   (render [this]
-    (let [{:keys [component/id content/controls evaluations/link] :as props} (om/props this)
-          ^boolean initialized? (:job-env link)]
-      (apply dom/div #js {:id (helpers/component-id props)
-                          :className (helpers/component-css-classes props)}
-             (if-not initialized?
-               [(button "Initialize"
-                        (fn []
-                          (om/transact! this `[(onyx/init {:id ~id
-                                                           :job ~(init-data link)
-                                                           :input-segments ~(input-segments link)})
-                                               :blueprint/sections])))]
-               (map (fn [control]
-                      (case control
-                        :initialize
-                        (button "Reinitialize"
-                                (fn []
-                                  (om/transact! this `[(onyx/init {:id ~id
-                                                                   :job ~(init-data link)
-                                                                   :input-segments ~(input-segments link)})
-                                                       :blueprint/sections])))
-                        :next-tick
-                        (button "Next tick"
-                                (fn []
-                                  (om/transact! this `[(onyx/tick {:id ~id})
-                                                       :blueprint/sections])))
-                        
-                        :next-batch
-                        (button "Next batch"
-                                (fn []
-                                  (om/transact! this `[(onyx/next-batch {:id ~id})
-                                                       :blueprint/sections])))
+    (let [{:keys [component/id content/controls link/evaluations] :as props} (om/props this)
+          ^boolean initialized? (:job-env evaluations)]
+      (dom/div #js {:id (helpers/component-id props)
+                    :className (helpers/component-css-classes props)}
+               (helpers/label props)
+               (apply dom/div #js {:className "controls-container"}
+                      (cond-> []
+                        (not initialized?)
+                        (conj (button "Initialize"
+                                      "initialize"
+                                      (fn []
+                                        (om/transact! this
+                                                      `[(onyx/init {:id ~id
+                                                                    :job ~(init-data evaluations)
+                                                                    :input-segments ~(input-segments evaluations)})
+                                                        :blueprint/sections]))))
+                        initialized?
+                        (into
+                         (map (fn [control]
+                                (case control
+                                  :initialize
+                                  (button "Reinitialize"
+                                          "reinitialize"
+                                          (fn []
+                                            (om/transact! this
+                                                          `[(onyx/init {:id ~id
+                                                                        :job ~(init-data evaluations)
+                                                                        :input-segments ~(input-segments evaluations)})
+                                                            :blueprint/sections])))
+                                  :next-tick
+                                  (button "Next tick"
+                                          "next-tick"
+                                          (fn []
+                                            (om/transact! this
+                                                          `[(onyx/tick {:id ~id})
+                                                            :blueprint/sections])))
+                                  
+                                  :next-batch
+                                  (button "Next batch"
+                                          "next-batch"
+                                          (fn []
+                                            (om/transact! this
+                                                          `[(onyx/next-batch {:id ~id})
+                                                            :blueprint/sections])))
 
-                        :run-to-completion
-                        (button "Run to completion"
-                                (fn []
-                                  (om/transact! this `[(onyx/drain {:id ~id})
-                                                       :blueprint/sections])))))
-                    controls))))))
+                                  :run-to-completion
+                                  (button "Run to completion"
+                                          "run-to-completion"
+                                          (fn []
+                                            (om/transact! this
+                                                          `[(onyx/drain {:id ~id})
+                                                            :blueprint/sections])))))
+                              controls))))))))
 
 (def simulator (om/factory Simulator))
 

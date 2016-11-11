@@ -2,16 +2,22 @@
   display: inline-block;
   clear: both;
   float: left;
+  margin-bottom: 1em;
 }
 
 .col {
   float: left;
+  margin-right: 1em;
+}
+
+.component .label {
+  text-decoration: underline;
 }
 
 p.component-html-element {
   clear: both;
 }
 
-.component-editor {
+.component-editor .CodeMirror {
   height: auto;
 }

@@ -67,15 +67,20 @@
 (defn target-tasks [vis-evt]
   (into [] (map keyword (.-nodes vis-evt))))
 
+(defn graph-id [props]
+  (str (helpers/component-id props)
+       "-graph"))
+
 (defui Graph
   static om/IQuery
   (query [this]
-    [:component/id :component/type :content/graph-direction :link/evaluations :layout/hints])
+    [:component/id :component/type :content/label
+     :content/graph-direction :link/evaluations :layout/hints])
   
   Object
   (componentDidMount [this]
     (let [{:keys [component/id] :as props} (om/props this)
-          graph (vis-graph (helpers/component-id props) props)]
+          graph (vis-graph (graph-id props) props)]
       (.on graph
            "selectNode"
            (fn [vis-evt]
@@ -97,8 +102,8 @@
   (componentDidUpdate [this prev-props prev-state]
     (let [props (om/props this)
           graph (om/get-state this :graph)
-          prev-workflow (get-in prev-props [:evaluations/link :workflow :result :value])
-          curr-workflow (get-in props [:evaluations/link :workflow :result :value])]
+          prev-workflow (get-in prev-props [:link/evaluations :workflow :result :value])
+          curr-workflow (get-in props [:link/evaluations :workflow :result :value])]
       (cond
         (not= prev-workflow curr-workflow)
         (transition! graph :update-workflow {:workflow curr-workflow}))))
@@ -106,7 +111,10 @@
   (render [this]
     (let [props (om/props this)]
       (dom/div #js {:id (helpers/component-id props)
-                    :className (helpers/component-css-classes props)}))))
+                    :className (helpers/component-css-classes props)}
+               (helpers/label props)
+               (dom/div #js {:id (graph-id props)
+                             :className "graph-container"})))))
 
 (def graph (om/factory Graph))
 

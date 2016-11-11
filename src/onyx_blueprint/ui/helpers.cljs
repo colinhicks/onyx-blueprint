@@ -1,5 +1,6 @@
 (ns onyx-blueprint.ui.helpers
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [om.dom :as dom]))
 
 (defn keyword->attr-val [kw]
   (-> kw
@@ -18,3 +19,7 @@
          " component-" ns
          " component-" ns "-" (name type)
          " " (:className hints))))
+
+(defn label [{:keys [content/label]}]
+  (when label
+    (dom/span #js {:className "label"} label)))

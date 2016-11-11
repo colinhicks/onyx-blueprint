@@ -22,19 +22,17 @@
    :autoCloseBrackets true
    :matchBrackets true})
 
-(defn editor [input-id opts css-classes]
+(defn editor [input-id opts]
   (let [el (.getElementById js/document input-id)]
     (when-not (= "none" (.. el -style -display))
       (let [ed (.fromTextArea js/CodeMirror el (clj->js (merge editor-config opts)))
             wrapper (.getWrapperElement ed)]
         (set! (.-id wrapper) (str input-id "-editor"))
-        (js/goog.dom.classlist.addAll
-         wrapper
-         (clj->js (str/split css-classes #" ")))
         ed))))
 
 (defn textarea-id [component-id]
-  (str (name component-id) "-textarea"))
+  (str (helpers/keyword->attr-val component-id)
+       "-textarea"))
 
 (defn format-default-input [default-input]
   (if (string? default-input)
@@ -46,7 +44,8 @@
 (defui CodeEditor
     static om/IQuery
     (query [this]
-      [:component/id :component/type :content/read-only? :content/default-input :layout/hints])
+      [:component/id :component/type :content/label
+       :content/read-only? :content/default-input :layout/hints])
     
     Object
     (componentDidMount [this]
@@ -55,8 +54,7 @@
             codemirror-opts (if read-only?
                               (assoc codemirror-opts :readOnly true)
                               codemirror-opts)
-            css-classes (helpers/component-css-classes props)
-            cm (editor (textarea-id id) codemirror-opts css-classes)]
+            cm (editor (textarea-id id) codemirror-opts)]
         ;; todo debounce
         (.on cm "change"
              (fn []
@@ -67,9 +65,12 @@
                                     :blueprint/sections])))))
 
     (render [this]
-      (let [{:keys [component/id content/default-input]} (om/props this)]
-        (dom/textarea #js {:id (textarea-id id)
-                           :defaultValue (format-default-input default-input)}))))
+      (let [{:keys [component/id content/default-input] :as props} (om/props this)]
+        (dom/div #js {:id (helpers/component-id props)
+                      :className (helpers/component-css-classes props)}
+                 (helpers/label props)
+                 (dom/textarea #js {:id (textarea-id id)
+                                    :defaultValue (format-default-input default-input)})))))
 
 (def code-editor (om/factory CodeEditor))
 
