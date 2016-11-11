@@ -12,24 +12,31 @@
   (let [data (or data @state)]
     {:value (get data key)}))
 
-(defmethod parser-read :component/target
-  [{:keys [state query parser data] :as env} key _]
-  (let [target-id (get data key)]
-    {:value (get-in @state [:blueprint/evaluations target-id])}))
-
-(defn resolve-evaluations [link state]
+(defn resolve-link [link source]
   (reduce-kv (fn [m k linkref]
                (if (map? linkref)
-                 (assoc m k (resolve-evaluations linkref state))
-                 (assoc m k (get-in state [:blueprint/evaluations linkref]))))
+                 (assoc m k (resolve-link linkref source))
+                 (assoc m k (get-in source (if (vector? linkref)
+                                             linkref
+                                             [linkref])))))
              {}
              link))
 
+(defmethod parser-read :link/ui-state
+  [{:keys [state query parser data] :as env} key _]
+  (let [link (get data key)]
+    {:value (resolve-link link (:blueprint/ui-state @state))}))
+
+(defmethod parser-read :link/evaluations
+  [{:keys [state query parser data] :as env} key _]
+  (let [link (get data key)]
+    {:value (resolve-link link (:blueprint/evaluations @state))}))
+
+;; obsolete
 (defmethod parser-read :evaluations/link
   [{:keys [state query parser data] :as env} key _]
-  (let [link (get data key)
-        st @state]
-    {:value (resolve-evaluations link @state)}))
+  (let [link (get data key)]
+    {:value (resolve-link link (:blueprint/evaluations @state))}))
 
 (defmethod parser-read :row/items
   [{:keys [state query parser data] :as env} key _]
@@ -129,17 +136,9 @@
                          (onyx.api/drain)
                          (onyx.api/stop))))})
 
-(defmethod parser-mutate 'onyx/init+batch+drain
-  [{:keys [state] :as env} key {:keys [id job input-batch]}]
-  (let [input-task (-> job :workflow ffirst)
-        hydrated-env (reduce (fn [j seg]
-                               (onyx.api/new-segment j input-task seg))
-                             (onyx.api/init job)
-                             input-batch)
-        job-env (-> hydrated-env
-                    (onyx.api/drain)
-                    (onyx.api/stop))]
-    {:action (fn []
-               (swap! state assoc-in
-                      [:blueprint/evaluations id]
-                      (job-evaluation id job-env)))}))
+(defmethod parser-mutate 'ui-state/update
+  [{:keys [state] :as env} key {:keys [id params]}]
+  {:action (fn []
+             (swap! state update-in
+                    [:blueprint/ui-state id]
+                    #(merge % params)))})

@@ -5,7 +5,8 @@
   (-> kw
       (str)
       (subs 1)
-      (str/replace #"/" "--")))
+      (str/replace #"/" "--")
+      (str/replace #"\." "_")))
 
 (defn component-id [{:keys [component/id layout/hints]}]
   (or (:id hints)

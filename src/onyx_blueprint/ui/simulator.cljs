@@ -42,7 +42,8 @@
                         (fn []
                           (om/transact! this `[(onyx/init {:id ~id
                                                            :job ~(init-data link)
-                                                           :input-segments ~(input-segments link)})])))]
+                                                           :input-segments ~(input-segments link)})
+                                               :blueprint/sections])))]
                (map (fn [control]
                       (case control
                         :initialize
@@ -50,24 +51,26 @@
                                 (fn []
                                   (om/transact! this `[(onyx/init {:id ~id
                                                                    :job ~(init-data link)
-                                                                   :input-segments ~(input-segments link)})])))
+                                                                   :input-segments ~(input-segments link)})
+                                                       :blueprint/sections])))
                         :next-tick
                         (button "Next tick"
                                 (fn []
-                                  (om/transact! this `[(onyx/tick {:id ~id})])))
+                                  (om/transact! this `[(onyx/tick {:id ~id})
+                                                       :blueprint/sections])))
                         
                         :next-batch
                         (button "Next batch"
                                 (fn []
-                                  (om/transact! this `[(onyx/next-batch {:id ~id})])))
+                                  (om/transact! this `[(onyx/next-batch {:id ~id})
+                                                       :blueprint/sections])))
 
                         :run-to-completion
                         (button "Run to completion"
                                 (fn []
-                                  (om/transact! this `[(onyx/drain {:id ~id})])))))
-                    controls)))
-      
-      )))
+                                  (om/transact! this `[(onyx/drain {:id ~id})
+                                                       :blueprint/sections])))))
+                    controls))))))
 
 (def simulator (om/factory Simulator))
 

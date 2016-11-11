@@ -97,7 +97,8 @@
       (binding [extensions/*custom-component-queries* custom-component-queries]
         (let [init-data {:blueprint/sections (into-tree components sections)}
               normalized-data (assoc (om/tree->db ui/Tutorial init-data true)
-                                     :blueprint/evaluations evaluations)
+                                     :blueprint/evaluations evaluations
+                                     :blueprint/ui-state {})
               reconciler (om/reconciler
                           {:state (atom normalized-data)
                            :parser (om/parser {:read extensions/parser-read

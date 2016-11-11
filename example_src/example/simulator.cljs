@@ -14,7 +14,7 @@
    
    {:component/id ::graph
     :component/type :graph/workflow
-    :evaluations/link {:workflow ::workflow
+    :link/evaluations {:workflow ::workflow
                        :simulator ::simulator}}
 
    {:component/id ::catalog
@@ -62,15 +62,17 @@
     :evaluations/link {:job-env ::simulator
                        :workflow ::workflow
                        :catalog ::catalog
-                       :input-segments ::input-segments}
+                       :input-segments ::input-segments}}
 
-    
-    }])
+   {:component/id ::inspector
+    :component/type :job-inspector/default
+    :link/evaluations {:job-env ::simulator}
+    :link/ui-state {:graph ::graph}}])
 
 (def sections
   [{:section/id ::graph-example
-    :section/layout ['[(::graph {:graph-direction "LR"})]
-                     [::workflow ::catalog ::input-segments ::fns]
-                     [::simulator]]}])
+    :section/layout ['[(::graph {:graph-direction "LR"}) ::inspector]
+                     [::simulator]
+                     [::workflow ::catalog ::input-segments ::fns]]}])
 
 (api/render-tutorial! components sections (gdom/getElement "app"))

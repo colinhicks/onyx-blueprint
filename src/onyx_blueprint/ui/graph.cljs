@@ -42,9 +42,9 @@
     #js {:nodes nodes
          :edges edges}))
 
-(defn vis-graph [graph-id {:keys [evaluations/link] :as props}]
+(defn vis-graph [graph-id {:keys [link/evaluations] :as props}]
   (let [el (gdom/getElement graph-id)
-        workflow (get-in link [:workflow :result :value])]
+        workflow (get-in evaluations [:workflow :result :value])]
     (js/vis.Network. el (vis-data workflow) (vis-opts props))))
 
 (defmulti transition! (fn [target command params]
@@ -64,16 +64,34 @@
   [target command params]
   (.setData target (vis-data (:workflow params))))
 
+(defn target-tasks [vis-evt]
+  (into [] (map keyword (.-nodes vis-evt))))
 
 (defui Graph
   static om/IQuery
   (query [this]
-    [:component/id :component/type :content/graph-direction :evaluations/link :layout/hints])
+    [:component/id :component/type :content/graph-direction :link/evaluations :layout/hints])
   
   Object
   (componentDidMount [this]
-    (let [props (om/props this)
+    (let [{:keys [component/id] :as props} (om/props this)
           graph (vis-graph (helpers/component-id props) props)]
+      (.on graph
+           "selectNode"
+           (fn [vis-evt]
+             (om/transact! this `[(ui-state/update {:id ~id
+                                                    :params {:action :select-tasks
+                                                             :tasks ~(target-tasks vis-evt)}})
+                                  :blueprint/sections])))
+
+      (.on graph
+           "deselectNode"
+           (fn [vis-evt]
+             (om/transact! this `[(ui-state/update {:id ~id
+                                                    :params {:action :deselect-tasks
+                                                             :tasks ~(target-tasks vis-evt)}})
+                                  :blueprint/sections])))
+      
       (om/set-state! this {:graph graph})))
 
   (componentDidUpdate [this prev-props prev-state]
