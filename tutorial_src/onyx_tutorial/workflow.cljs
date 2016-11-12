@@ -244,12 +244,12 @@
   [{:section/id :workflow-basics
     :section/layout [[::title]
                      '[::graph-desc
-                       (::graph {:className "graph-height-med col-shrink-2"})
+                       (::graph {:className "col-shrink-2"})
                        ::cheat-sheet-note-and-task-definition]
                      
                      [::in-action-header]
                      [::in-action-leadin ::in-action-note]
-                     '[(::in-action-input-segments {:className "col-shrink-5"})
+                     [::in-action-input-segments
                        ::in-action-simulator
                        ::in-action-inspector]
                      [::in-action-description ::segment-definition]
@@ -257,18 +257,18 @@
                      [::implementing-1-header]
                      [::implementing-1-leadin]
                      '[::implementing-1-data-a
-                       ::implementing-1-graph-a
-                       (::implementing-1-graph-b {:className "graph-height-med"})]
+                       (::implementing-1-graph-a {:className "col-center"})
+                       (::implementing-1-graph-b {:className "col-center col-height-med"})]
 
                      [::implementing-2-leadin]
                      '[::implementing-2-data-a
-                       ::implementing-2-graph-a
-                       (::implementing-2-graph-b {:className "graph-height-med"})]
+                       (::implementing-2-graph-a {:className "col-center"})
+                       (::implementing-2-graph-b {:className "col-center col-height-med"})]
 
                      [::implementing-3-leadin]                   
                      '[::implementing-3-data-a
-                       ::implementing-3-graph-a
-                       ::implementing-3-graph-b]
+                       (::implementing-3-graph-a {:className "col-center"})
+                       (::implementing-3-graph-b {:className "col-center col-height-med"})]
 
                      [::outro]
 
