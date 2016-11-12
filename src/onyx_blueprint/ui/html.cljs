@@ -69,20 +69,3 @@
 
 (defmethod extensions/component-ui :blueprint/html [props]
   (html-component props))
-
-;; deprecated
-(defmethod extensions/component-ui :html/element [props]
-  (html-component props))
-
-(defmethod extensions/component-ui :html/hiccup [props]
-  (html-component props))
-
-(defmethod extensions/component-ui :html/header [props]
-  (html-component (merge props {:content/tag :h2})))
-
-(defmethod extensions/component-ui :html/sub-header [props]
-  (html-component (merge props {:content/tag :h4})))
-
-(defmethod extensions/component-ui :html/body [props]
-  (html-component (merge props {:content/tag :p})))
-

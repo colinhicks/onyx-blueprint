@@ -52,8 +52,3 @@
 (defmethod extensions/component-ui :blueprint/job-inspector
   [props]
   (job-inspector props))
-
-;; deprecated
-(defmethod extensions/component-ui :job-inspector/default
-  [props]
-  (job-inspector props))

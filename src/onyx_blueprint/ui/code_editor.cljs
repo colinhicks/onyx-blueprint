@@ -77,12 +77,3 @@
 (defmethod extensions/component-ui :blueprint/editor
   [props]
   (code-editor props))
-
-;; deprecated
-(defmethod extensions/component-ui :editor/fn
-  [props]
-  (code-editor props))
-
-(defmethod extensions/component-ui :editor/data-structure
-  [props]
-  (code-editor props))
