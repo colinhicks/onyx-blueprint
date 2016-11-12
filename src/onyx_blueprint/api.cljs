@@ -86,6 +86,13 @@
      (fn [error-result]
        (done-cb @results)))))
 
+(defn initial-ui-state [components]
+  (->> components
+       (keep (fn [{:keys [component/id ui-state/initial]}]
+               (when initial
+                 [id initial])))
+       (into {})))
+
 (defn render-tutorial!
   ([components sections target-el]
    (render-tutorial! components sections {} target-el))
@@ -98,7 +105,7 @@
         (let [init-data {:blueprint/sections (into-tree components sections)}
               normalized-data (assoc (om/tree->db ui/Tutorial init-data true)
                                      :blueprint/evaluations evaluations
-                                     :blueprint/ui-state {})
+                                     :blueprint/ui-state (initial-ui-state components))
               reconciler (om/reconciler
                           {:state (atom normalized-data)
                            :parser (om/parser {:read extensions/parser-read

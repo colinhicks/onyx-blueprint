@@ -32,11 +32,9 @@
   (let [link (get data key)]
     {:value (resolve-link link (:blueprint/evaluations @state))}))
 
-;; obsolete
-(defmethod parser-read :evaluations/link
+(defmethod parser-read :ui-state/shared
   [{:keys [state query parser data] :as env} key _]
-  (let [link (get data key)]
-    {:value (resolve-link link (:blueprint/evaluations @state))}))
+  {:value (get-in @state [:blueprint/ui-state (:component/id data)])})
 
 (defmethod parser-read :row/items
   [{:keys [state query parser data] :as env} key _]

@@ -47,22 +47,26 @@
         workflow (get-in evaluations [:workflow :result :value])]
     (js/vis.Network. el (vis-data workflow) (vis-opts props))))
 
-(defmulti transition! (fn [target command params]
-                        command))
-
+(defmulti transition! (fn [graph params]
+                        (:action params)))
 
 (defmethod transition! :reset
-  [target command params]
-  (.unselectAll target)
-  (.releaseNode target))
+  [graph params]
+  (.unselectAll graph)
+  (.releaseNode graph))
 
-(defmethod transition! :focus
-  [target command params]
-  (.focus target (:node-id params)))
+(defmethod transition! :select-tasks
+  [graph params]
+  (.selectNodes graph
+                (->> params
+                     :tasks
+                     (map name)
+                     (clj->js))
+                false))
 
 (defmethod transition! :update-workflow
-  [target command params]
-  (.setData target (vis-data (:workflow params))))
+  [graph params]
+  (.setData graph (vis-data (:workflow params))))
 
 (defn target-tasks [vis-evt]
   (into [] (map keyword (.-nodes vis-evt))))
@@ -74,13 +78,14 @@
 (defui Graph
   static om/IQuery
   (query [this]
-    [:component/id :component/type :content/label
-     :content/graph-direction :link/evaluations :layout/hints])
+    [:component/id :component/type :content/label :content/graph-direction
+     :link/evaluations :layout/hints :ui-state/shared])
   
   Object
   (componentDidMount [this]
-    (let [{:keys [component/id] :as props} (om/props this)
-          graph (vis-graph (graph-id props) props)]
+    (let [{:keys [component/id ui-state/shared] :as props} (om/props this)
+          graph (vis-graph (graph-id props) props)
+          shared-state-on-mount? ^boolean shared]
       (.on graph
            "selectNode"
            (fn [vis-evt]
@@ -96,6 +101,9 @@
                                                     :params {:action :deselect-tasks
                                                              :tasks ~(target-tasks vis-evt)}})
                                   :blueprint/sections])))
+
+      (when shared-state-on-mount?
+        (transition! graph shared))
       
       (om/set-state! this {:graph graph})))
 
@@ -104,9 +112,9 @@
           graph (om/get-state this :graph)
           prev-workflow (get-in prev-props [:link/evaluations :workflow :result :value])
           curr-workflow (get-in props [:link/evaluations :workflow :result :value])]
-      (cond
-        (not= prev-workflow curr-workflow)
-        (transition! graph :update-workflow {:workflow curr-workflow}))))
+      (when (not= prev-workflow curr-workflow)
+        (transition! graph {:action :update-workflow
+                            :workflow curr-workflow}))))
 
   (render [this]
     (let [props (om/props this)]

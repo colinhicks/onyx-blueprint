@@ -19,12 +19,14 @@
               [:p "As you can see in the visualization, these keywords represent nodes in the workflow graph. Each inner vector represents a directed edge from the first node to the second."]])
 
    {:component/id ::graph
-    :component/type :graph/workflow
-    :evaluations/link {:workflow ::graph-data}}
+    :component/type :blueprint/graph
+    :ui-state/initial {:action :select-tasks
+                       :tasks [:read-input :write-output]}
+    :link/evaluations {:workflow ::graph-data}}
 
    ;; not displayed must match :pre above
    {:component/id ::graph-data
-    :component/type :editor/data-structure
+    :component/type :blueprint/editor
     :evaluations/init :content/default-input
     :content/read-only? true
     :content/default-input [[:read-input :increment-n]
@@ -48,8 +50,9 @@
              [:aside [:p "Later in the tutorial, you'll configure Onyx to do your bidding at each task in your workflow. In this example, that's been done for you behind the scenes."]])
 
    {:component/id ::in-action-input-segments
-    :component/type :editor/data-structure
+    :component/type :blueprint/editor
     :evaluations/init :content/default-input
+    :content/label "Input data"
     :content/default-input (with-out-str
                              (binding [pprint/*print-right-margin* 15]
                                (pprint/pprint [{:n 0}
@@ -64,12 +67,20 @@
                                                {:n 9}])))}
 
    {:component/id ::in-action-simulator
-    :component/type :simulator/batch-outputs
-    :evaluations/link {:workflow ::graph-data
+    :component/type :blueprint/simulator
+    :content/label "Job controls"
+    :content/controls [:initialize :run-to-completion]
+    :link/evaluations {:workflow ::graph-data
                        :catalog ::in-action-catalog
                        :job-env ::in-action-simulator
                        :user-fn ::in-action-fns
                        :input-segments ::in-action-input-segments}}
+
+   {:component/id ::in-action-inspector
+    :component/type :blueprint/job-inspector
+    :content/label "Task status"
+    :link/evaluations {:job-env ::in-action-simulator}
+    :link/ui-state {:graph ::graph}}
 
    (b/hiccup ::in-action-description
              [:div
@@ -86,7 +97,7 @@
 
    ;; behind the scenes
    {:component/id ::in-action-catalog
-    :component/type :editor/data-structure
+    :component/type :blueprint/editor
     :evaluations/init :content/default-input
     :content/default-input [{:onyx/name :read-input
                              :onyx/type :input
@@ -104,7 +115,7 @@
                              :onyx/batch-size 1}]}
 
    {:component/id ::in-action-fns
-    :component/type :editor/fn
+    :component/type :blueprint/editor
     :evaluations/init :content/default-input
     :content/default-input
     "(defn ^:export increment-n [segment] (update-in segment [:n] inc))
@@ -121,22 +132,23 @@
    (b/hiccup ::implementing-1-label-a [:em "Graph A"])
    
    {:component/id ::implementing-1-graph-a
-    :component/type :graph/workflow
-    :evaluations/link {:workflow ::implementing-1-data-a}}
+    :component/type :blueprint/graph
+    :content/label "Graph A"
+    :link/evaluations {:workflow ::implementing-1-data-a}}
    
    {:component/id ::implementing-1-data-a
-    :component/type :editor/data-structure
+    :component/type :blueprint/editor
     :evaluations/init :content/default-input
+    :content/label "Workflow A"
     :content/default-input [[:read-segments :write-segments]]}
 
-   (b/hiccup ::implementing-1-label-b [:em "Graph B"])
-   
    {:component/id ::implementing-1-graph-b
-    :component/type :graph/workflow
-    :evaluations/link {:workflow ::implementing-1-data-b}}
+    :component/type :blueprint/graph
+    :content/label "Graph B"
+    :link/evaluations {:workflow ::implementing-1-data-b}}
    
    {:component/id ::implementing-1-data-b
-    :component/type :editor/data-structure
+    :component/type :blueprint/editor
     :evaluations/init :content/default-input
     :content/read-only? true
     :content/default-input [[:read-segments :cube-n]
@@ -149,25 +161,24 @@
               [:p "Workflows are direct, acyclic graphs - meaning they can split and merge."]
               [:p "Try modeling the workflow in Graph D. The task " [:code ":cube-n"] " splits its output into two streams - into tasks " [:code ":add-ten"]", and " [:code ":add-forty"]". Both tasks get " [:em "all"] " the segments produced by " [:code ":cube-n"] ". Their results are sent to " [:code ":multiply-by-5"]"."]])
 
-   (b/hiccup ::implementing-2-label-a [:em "Graph C"])
-   
    {:component/id ::implementing-2-graph-a
-    :component/type :graph/workflow
-    :evaluations/link {:workflow ::implementing-2-data-a}}
+    :component/type :blueprint/graph
+    :content/label "Graph C"
+    :link/evaluations {:workflow ::implementing-2-data-a}}
    
    {:component/id ::implementing-2-data-a
-    :component/type :editor/data-structure
+    :component/type :blueprint/editor
     :evaluations/init :content/default-input
+    :content/label "Workflow C"
     :content/default-input [[:read-segments :write-segments]]}
 
-   (b/hiccup ::implementing-2-label-b [:em "Graph D"])
-   
    {:component/id ::implementing-2-graph-b
-    :component/type :graph/workflow
-    :evaluations/link {:workflow ::implementing-2-data-b}}
+    :component/type :blueprint/graph
+    :content/label "Graph D"
+    :link/evaluations {:workflow ::implementing-2-data-b}}
    
    {:component/id ::implementing-2-data-b
-    :component/type :editor/data-structure
+    :component/type :blueprint/editor
     :evaluations/init :content/default-input
     :content/read-only? true
     :content/default-input [[:read-segments :cube-n]
@@ -177,29 +188,27 @@
                             [:add-forty :multiply-by-5]
                             [:multiply-by-5 :write-segments]]}
 
-   
    (b/body ::implementing-3-leadin
            "Function tasks aren't the only thing in workflows that can branch. Inputs and outputs can branch, too. Let's try a more complex workflow, shown below. We use single capital letters for tasks this time for concision.")
 
-   (b/hiccup ::implementing-3-label-a [:em "Graph E"])
-   
    {:component/id ::implementing-3-graph-a
-    :component/type :graph/workflow
-    :evaluations/link {:workflow ::implementing-3-data-a}}
+    :component/type :blueprint/graph
+    :content/label "Graph E"
+    :link/evaluations {:workflow ::implementing-3-data-a}}
    
    {:component/id ::implementing-3-data-a
-    :component/type :editor/data-structure
+    :component/type :blueprint/editor
+    :content/label "Workflow E"
     :evaluations/init :content/default-input
     :content/default-input [[:A :L]]}
 
-   (b/hiccup ::implementing-3-label-b [:em "Graph F"])
-   
    {:component/id ::implementing-3-graph-b
-    :component/type :graph/workflow
-    :evaluations/link {:workflow ::implementing-3-data-b}}
+    :component/type :blueprint/graph
+    :content/label "Graph F"
+    :link/evaluations {:workflow ::implementing-3-data-b}}
    
    {:component/id ::implementing-3-data-b
-    :component/type :editor/data-structure
+    :component/type :blueprint/editor
     :evaluations/init :content/default-input
     :content/read-only? true
     :content/default-input [[:A :D]
@@ -223,7 +232,6 @@
 (def sections
   [{:section/id :workflow-basics
     :section/layout [[::title]
-                     ;;[::leadin ::cheat-sheet-note]
                      '[::graph-desc
                        (::graph {:className "graph-height-med col-shrink-2"})
                        ::cheat-sheet-note-and-task-definition]
@@ -231,30 +239,22 @@
                      [::in-action-header]
                      [::in-action-leadin ::in-action-note]
                      '[(::in-action-input-segments {:className "col-shrink-5"})
-                       ::in-action-simulator]
+                       ::in-action-simulator
+                       ::in-action-inspector]
                      [::in-action-description ::segment-definition]
                      
                      [::implementing-1-header]
                      [::implementing-1-leadin]
-                     '[(::implementing-label-editor {:className "col-center"})
-                       (::implementing-1-label-a {:className "col-center"})
-                       (::implementing-1-label-b {:className "col-center"})]
                      '[::implementing-1-data-a
                        ::implementing-1-graph-a
                        (::implementing-1-graph-b {:className "graph-height-med"})]
 
                      [::implementing-2-leadin]
-                     '[(::implementing-label-editor {:className "col-center"})
-                       (::implementing-2-label-a {:className "col-center"})
-                       (::implementing-2-label-b {:className "col-center"})]
                      '[::implementing-2-data-a
                        ::implementing-2-graph-a
                        (::implementing-2-graph-b {:className "graph-height-med"})]
 
                      [::implementing-3-leadin]                   
-                     '[(::implementing-label-editor {:className "col-center"})
-                       (::implementing-3-label-a {:className "col-center"})
-                       (::implementing-3-label-b {:className "col-center"})]
                      '[::implementing-3-data-a
                        ::implementing-3-graph-a
                        ::implementing-3-graph-b]

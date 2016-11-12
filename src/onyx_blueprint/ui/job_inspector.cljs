@@ -7,9 +7,8 @@
             [onyx-blueprint.extensions :as extensions]
             [onyx-blueprint.ui.helpers :as helpers]))
 
-(defn selected-task-status [graph-state {:keys [job-env]}]
-  (let [task (-> graph-state :tasks first) ;; todo: support multiple selection?
-        status (-> job-env :result :value (onyx.api/env-summary) :tasks task)]
+(defn selected-task-status [env-summary task]
+  (let [status (-> env-summary :tasks task)]
     (dom/div #js {:className "task-status"}
              (dom/code #js {:className "task-name"} (str task))
              (if ^boolean status
@@ -26,21 +25,27 @@
   Object
   (render [this]
     (let [{:keys [link/evaluations link/ui-state] :as props} (om/props this)
-          graph-state (:graph ui-state)
+          {:keys [action tasks] :as graph-state} (:graph ui-state)
           ^boolean no-graph-selection? (or (nil? graph-state)
                                            (keyword-identical? :deselect-tasks
-                                                               (:action graph-state)))]
-      (dom/div #js {:id (helpers/component-id props)
+                                                               action))]
+      (apply dom/div #js {:id (helpers/component-id props)
                     :className (str (helpers/component-css-classes props)
                                     (when-not no-graph-selection? " selected-graph"))}
-               (helpers/label props)
-               (case (:action graph-state)
-                 (nil :deselect-tasks)
-                 (dom/div #js {:className "advice"} "Select a task on the graph.")
+             (cond-> [(helpers/label props)]
+               no-graph-selection?
+               (conj
+                (dom/div #js {:className "advice"} "Select a task on the graph."))
 
-                 :select-tasks
-                 (selected-task-status graph-state evaluations)
-                 )))))
+               (keyword-identical? :select-tasks action)
+               (into
+                (map (partial selected-task-status
+                              (-> evaluations
+                                  :job-env
+                                  :result
+                                  :value
+                                  (onyx.api/env-summary)))
+                     tasks)))))))
 
 (def job-inspector (om/factory JobInspector))
 
