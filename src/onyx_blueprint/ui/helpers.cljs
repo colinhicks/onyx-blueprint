@@ -16,7 +16,7 @@
 (defn component-css-classes [{:keys [component/type layout/hints]}]
   (str "col component"
        " component-" (namespace type) "-" (name type)
-       (when (:className hints) " " (:className hints))))
+       (when (:className hints) (str " " (:className hints)))))
 
 (defn label [{:keys [content/label]}]
   (when label

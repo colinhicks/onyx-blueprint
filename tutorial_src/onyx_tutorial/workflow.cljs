@@ -138,6 +138,7 @@
    
    {:component/id ::implementing-1-data-a
     :component/type :blueprint/editor
+    :evaluations/validate-spec :onyx.core/workflow
     :evaluations/init :content/default-input
     :content/label "Workflow A"
     :content/default-input [[:read-segments :write-segments]]}
@@ -168,6 +169,7 @@
    
    {:component/id ::implementing-2-data-a
     :component/type :blueprint/editor
+    :evaluations/validate-spec :onyx.core/workflow
     :evaluations/init :content/default-input
     :content/label "Workflow C"
     :content/default-input [[:read-segments :write-segments]]}
@@ -199,6 +201,7 @@
    {:component/id ::implementing-3-data-a
     :component/type :blueprint/editor
     :content/label "Workflow E"
+    :evaluations/validate-spec :onyx.core/workflow
     :evaluations/init :content/default-input
     :content/default-input [[:A :L]]}
 
@@ -227,6 +230,14 @@
 
    (b/body ::outro
            "Now that you have the hang of workflows, it's time to discuss how to tell Onyx what to actually do at each task ...")
+
+   {:component/id ::auditor
+    :component/type :blueprint/auditor
+    :content/label "Code status"
+    :link/evaluations {:in-action-input-segments ::in-action-input-segments
+                       :implementing-1-data-a ::implementing-1-data-a
+                       :implementing-2-data-a ::implementing-2-data-a
+                       :implementing-3-data-a ::implementing-3-data-a}}
    ])
 
 (def sections
@@ -260,6 +271,8 @@
                        ::implementing-3-graph-b]
 
                      [::outro]
+
+                     '[(::auditor {:className "fixed-bottom"})]
                      ]}])
 
 (api/render-tutorial! components sections (gdom/getElement "app"))

@@ -59,18 +59,50 @@ aside.col {
 
 /* component-specific */
 
-.component-editor {
+/* .component-graph { */
+/*   min-width: 300px; */
+/*   min-height: 300px; */
+/*   height: auto; */
+/* } */
+
+/* .component-graph.graph-height-med { */
+/*   min-height: 500px; }*/
+
+
+.component .label {
+  text-decoration: underline;
+}
+
+.component-blueprint-editor .CodeMirror {
   height: auto;
 }
 
-.component-graph {
-  min-width: 300px;
-  min-height: 300px;
-  height: auto;
+.component-blueprint-graph {
+  /* In some cases vis.js can't reasonably guess container dimensions. */
+  width: 500px;
 }
 
-.component-graph.graph-height-med {
-  min-height: 500px;
+.component-blueprint-auditor.fixed-bottom {
+  background-color: #eee;
+  padding: 0.5em 1em;
+  width: 100%;
+  position: fixed;
+  border-top: 2px solid #fff;
+  outline: 1px solid #eee;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+}
+
+.component-blueprint-auditor .valid-mark::before {
+  content: "✗";
+  color: red;
+  margin-left: 3px;
+}
+
+.component-blueprint-auditor.valid .valid-mark::before {
+  content: "✓";
+  color: inherit;
 }
 
 /* misc */
