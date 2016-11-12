@@ -9,6 +9,7 @@
                  [org.onyxplatform/onyx-local-rt "0.9.11.0"]
                  [org.omcljs/om "1.0.0-alpha47"]
                  [cljsjs/codemirror "5.19.0-0"]
+                 [cljsjs/vis "4.16.1-0"]
                  [sablono "0.7.5"]]
 
   :plugins [[lein-figwheel "0.5.8"]

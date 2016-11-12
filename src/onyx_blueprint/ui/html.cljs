@@ -47,9 +47,8 @@
         css-classes (helpers/component-css-classes props)]
     
     (if (coll? text)
-      (apply dom/div nil
-             (map (partial el #js {:className css-classes})
-                  text))
+      (apply dom/div #js {:className css-classes}
+             (map (partial el nil) text))
       (el #js {:className css-classes} text))))
 
 
@@ -68,19 +67,5 @@
 
 (def html-component (om/factory Html))
 
-(defmethod extensions/component-ui :html/element [props]
+(defmethod extensions/component-ui :blueprint/html [props]
   (html-component props))
-
-(defmethod extensions/component-ui :html/hiccup [props]
-  (html-component props))
-
-;; deprecated
-(defmethod extensions/component-ui :html/header [props]
-  (html-component (merge props {:content/tag :h2})))
-
-(defmethod extensions/component-ui :html/sub-header [props]
-  (html-component (merge props {:content/tag :h4})))
-
-(defmethod extensions/component-ui :html/body [props]
-  (html-component (merge props {:content/tag :p})))
-

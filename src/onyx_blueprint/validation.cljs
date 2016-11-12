@@ -5,7 +5,7 @@
 
 (defmethod extensions/validate :default
   [spec value]
-  (if (and (not (nil? value)) (s/valid? spec value))
+  (if (s/valid? spec value)
     {:valid? true}
     {:valid? false
      :explain (s/explain-str spec value)}))

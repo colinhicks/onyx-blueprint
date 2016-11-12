@@ -4,10 +4,13 @@
             [om.dom :as dom]
             [om.next :as om :refer-macros [defui]]
             [onyx-blueprint.extensions :as extensions]
+            [onyx-blueprint.ui.helpers :as helpers]
             [onyx-blueprint.ui.code-editor :refer [CodeEditor]]
             [onyx-blueprint.ui.graph :refer [Graph]]
             [onyx-blueprint.ui.html :refer [Html]]
-            [onyx-blueprint.ui.simulator :refer [Simulator]]))
+            [onyx-blueprint.ui.simulator :refer [Simulator]]
+            [onyx-blueprint.ui.job-inspector :refer [JobInspector]]
+            [onyx-blueprint.ui.auditor :refer [Auditor]]))
 
 (defui TutorialComponent
     static om/Ident
@@ -16,10 +19,12 @@
 
     static om/IQuery
     (query [this]
-      (merge {:html (om/get-query Html)
-              :graph (om/get-query Graph)
-              :editor (om/get-query CodeEditor)
-              :simulator (om/get-query Simulator)}
+      (merge {:blueprint/html (om/get-query Html)
+              :blueprint/graph (om/get-query Graph)
+              :blueprint/editor (om/get-query CodeEditor)
+              :blueprint/simulator (om/get-query Simulator)
+              :blueprint/job-inspector (om/get-query JobInspector)
+              :blueprint/auditor (om/get-query Auditor)}
              extensions/*custom-component-queries*))
 
     Object
@@ -40,7 +45,7 @@
     Object
     (render [this]
       (let [{:keys [section/id section/rows] :as props} (om/props this)]
-        (apply dom/div #js {:id (name id) :className "section"} ; todo namespace-based html id
+        (apply dom/div #js {:id (helpers/keyword->attr-val id) :className "section"}
                (mapv (fn [{:keys [row/items]}]
                        (apply dom/div #js {:className "row"} (mapv component items)))
                      rows)))))

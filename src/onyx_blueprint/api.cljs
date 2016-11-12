@@ -12,7 +12,7 @@
    (str source)
    script-id
    (fn [result]
-     (let [^boolean success? (not (seq (:warnings result)))]
+     (let [^boolean success? (not (:error result))]
        (cb {:component/id component-id
             :result result
             :state (if success? :success :error)
@@ -55,7 +55,7 @@
                                    (map
                                     (fn [{:keys [key params]}]
                                       (if-let [component (some
-                                                          #(when (= key (:component/id %)) %)
+                                                          #(when (keyword-identical? key (:component/id %)) %)
                                                           components)]
                                         (assoc component
                                                :section/id id
@@ -86,6 +86,13 @@
      (fn [error-result]
        (done-cb @results)))))
 
+(defn initial-ui-state [components]
+  (->> components
+       (keep (fn [{:keys [component/id ui-state/initial]}]
+               (when initial
+                 [id initial])))
+       (into {})))
+
 (defn render-tutorial!
   ([components sections target-el]
    (render-tutorial! components sections {} target-el))
@@ -97,7 +104,8 @@
       (binding [extensions/*custom-component-queries* custom-component-queries]
         (let [init-data {:blueprint/sections (into-tree components sections)}
               normalized-data (assoc (om/tree->db ui/Tutorial init-data true)
-                                     :blueprint/evaluations evaluations)
+                                     :blueprint/evaluations evaluations
+                                     :blueprint/ui-state (initial-ui-state components))
               reconciler (om/reconciler
                           {:state (atom normalized-data)
                            :parser (om/parser {:read extensions/parser-read

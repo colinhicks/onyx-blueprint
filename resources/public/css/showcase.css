@@ -2,24 +2,12 @@
   display: inline-block;
   clear: both;
   float: left;
+  margin-bottom: 1em;
 }
 
 .col {
   float: left;
-}
-
-p.component-html-element {
-  clear: both;
-}
-
-.component-editor {
-  height: auto;
-}
-
-.component-graph {
-  min-width: 300px;
-  min-height: 300px;
-  height: auto;
+  margin-right: 1em;
 }
 
 aside, blockquote {
@@ -32,4 +20,26 @@ aside {
 
 blockquote {
   background-color: #eee;
+}
+
+/* component defaults  */
+.component .label {
+  text-decoration: underline;
+}
+
+.component-blueprint-editor .CodeMirror {
+  height: auto;
+}
+
+.component-blueprint-graph {
+  /* In some cases vis.js can't reasonably guess container dimensions. */
+  width: 500px;
+}
+
+.component-blueprint-auditor .valid-mark::before {
+  content: "✗"
+}
+
+.component-blueprint-auditor.valid .valid-mark::before {
+  content: "✓"
 }

@@ -1,95 +1,101 @@
 (ns onyx-blueprint.ui.simulator
   (:require [cljs.pprint :as pprint]
+            [goog.dom :as gdom]
             [om.dom :as dom]
             [om.next :as om :refer-macros [defui]]
             [onyx-blueprint.extensions :as extensions]
-            [onyx-blueprint.ui.code-editor :as code-editor]
-            [onyx-blueprint.ui.helpers :as helpers]
-            [onyx-local-rt.api :as onyx.api]))
+            [onyx-blueprint.ui.helpers :as helpers]))
 
-(defn button [label cb]
+
+(defn button [label css-class cb]
   (dom/input #js {:value label
                   :type "button"
-                  :onClick cb}))
+                  :onClick cb
+                  :className css-class}))
 
-;; todo refactor
-(defn basic-simulator [component]
-  (let [{:keys [component/id evaluations/link] :as props} (om/props component)
-        init-data (-> link :init-data :result :value)
-        job-env (-> link :job-env :result :value)
-        valid-user-fn? (= :success (-> link :user-fn :state))
-        env-summary (if job-env (onyx.api/env-summary job-env))
-        transact! (partial om/transact! component)]
-    (apply dom/div #js {:id (name id) :className (helpers/component-css-classes props)}
-           (cond-> []
-             (not valid-user-fn?)
-             (conj (dom/pre nil (with-out-str (pprint/pprint (-> link :user-fn :result :warnings)))))
-             
-             (and valid-user-fn? (nil? job-env))
-             (conj (button "Initialize job"
-                           (fn [evt]
-                             (.preventDefault evt)
-                             (transact! `[(onyx/init {:id ~id :job ~init-data})]))))
-             (and valid-user-fn? job-env)
-             (conj (button "Reinitialize job"
-                           (fn [evt]
-                             (.preventDefault evt)
-                             (transact! `[(onyx/init {:id ~id :job ~init-data})])))
-                   (button "Generate input"
-                           (fn [evt]
-                             (.preventDefault evt)
-                             (transact! `[(onyx/new-segment {:id ~id})])))
-                   (button ">"
-                           (fn [evt]
-                             (.preventDefault evt)
-                             (transact! `[(onyx/tick {:id ~id})])))
-                   (button ">>"
-                           (fn [evt]
-                             (.preventDefault evt)
-                             (transact! `[(onyx/drain {:id ~id})])))                       
-                   (dom/pre nil (with-out-str (pprint/pprint env-summary))))))))
+;; todo handle malformed data
+(defn init-data [{:keys [workflow catalog job]}]
+  (if job
+    (-> job :result :value)
+    {:workflow (-> workflow :result :value)
+     :catalog (-> catalog :result :value)}))
 
-(defn batch-outputs-simulator [component]
-  (let [{:keys [component/id evaluations/link] :as props} (om/props component)
-        ;; todo util respective of parser/resolve-evaluations
-        init-data (reduce-kv (fn [m k v]
-                               (assoc m k (-> v :result :value)))
-                             {}
-                             (:init-data link))
-        job-env (-> link :job-env :result :value)
-        env-summary (if job-env (onyx.api/env-summary job-env))
-        input-batch (-> link :input-segments :result :value)
-        outputs (-> env-summary
-                     :tasks
-                     (get (second (last (:workflow init-data))))
-                     :outputs)
-        transact! (partial om/transact! component)]
-    (dom/div #js {:id (name id) :className (helpers/component-css-classes props)}
-             (button "Process input"
-                     (fn [evt]
-                       (.preventDefault evt)
-                       (transact! `[(onyx/init+batch+drain {:id ~id
-                                                       :job ~init-data
-                                                       :input-batch ~input-batch})])))
-             (dom/pre nil (with-out-str (pprint/pprint outputs))))))
+;; todo handle malformed data
+(defn input-segments [evaluations]
+  (-> evaluations
+      :input-segments
+      :result
+      :value))
 
 (defui Simulator
   static om/IQuery
   (query [this]
-    [:component/id :component/type :evaluations/link])
+    [:component/id :component/type :content/label
+     :content/controls :link/evaluations :layout/hints])
   
   Object
   (render [this]
-    (case (:component/type (om/props this))
-      :simulator/basic (basic-simulator this)
-      :simulator/batch-outputs (batch-outputs-simulator this))))
+    (let [{:keys [component/id content/controls link/evaluations] :as props} (om/props this)
+          ^boolean initialized? (:job-env evaluations)]
+      (dom/div #js {:id (helpers/component-id props)
+                    :className (helpers/component-css-classes props)}
+               (helpers/label props)
+               (apply dom/div #js {:className "controls-container"}
+                      (cond-> []
+                        (not initialized?)
+                        (conj (button "Initialize"
+                                      "initialize"
+                                      (fn []
+                                        (om/transact! this
+                                                      `[(onyx/init {:id ~id
+                                                                    :job ~(init-data evaluations)
+                                                                    :input-segments ~(input-segments evaluations)})
+                                                        :blueprint/sections]))))
+                        initialized?
+                        (into
+                         (map (fn [control]
+                                (case control
+                                  :initialize
+                                  (button "Reinitialize"
+                                          "reinitialize"
+                                          (fn []
+                                            (om/transact! this
+                                                          `[(onyx/init {:id ~id
+                                                                        :job ~(init-data evaluations)
+                                                                        :input-segments ~(input-segments evaluations)})
+                                                            :blueprint/sections])))
+                                  :next-tick
+                                  (button "Next tick"
+                                          "next-tick"
+                                          (fn []
+                                            (om/transact! this
+                                                          `[(onyx/tick {:id ~id})
+                                                            :blueprint/sections])))
+                                  
+                                  :next-batch
+                                  (button "Next batch"
+                                          "next-batch"
+                                          (fn []
+                                            (om/transact! this
+                                                          `[(onyx/next-batch {:id ~id})
+                                                            :blueprint/sections])))
+
+                                  :run-to-completion
+                                  (button "Run to completion"
+                                          "run-to-completion"
+                                          (fn []
+                                            (om/transact! this
+                                                          `[(onyx/drain {:id ~id})
+                                                            :blueprint/sections])))))
+                              controls))))))))
 
 (def simulator (om/factory Simulator))
 
-(defmethod extensions/component-ui :simulator/basic
+(defmethod extensions/component-ui :blueprint/simulator
   [props]
   (simulator props))
 
-(defmethod extensions/component-ui :simulator/batch-outputs
+;; deprecated
+(defmethod extensions/component-ui :simulator/default
   [props]
   (simulator props))

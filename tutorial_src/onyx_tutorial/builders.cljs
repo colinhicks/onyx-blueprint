@@ -3,13 +3,13 @@
 (defn html
   [tag id text]
   {:component/id id
-   :component/type :html/element
+   :component/type :blueprint/html
    :content/tag tag
    :content/text text})
 
 (defn hiccup [id edn]
   {:component/id id
-   :component/type :html/hiccup
+   :component/type :blueprint/html
    :content/hiccup edn})
 
 (def header (partial html :h2))

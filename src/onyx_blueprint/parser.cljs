@@ -12,24 +12,29 @@
   (let [data (or data @state)]
     {:value (get data key)}))
 
-(defmethod parser-read :component/target
-  [{:keys [state query parser data] :as env} key _]
-  (let [target-id (get data key)]
-    {:value (get-in @state [:blueprint/evaluations target-id])}))
-
-(defn resolve-evaluations [link state]
+(defn resolve-link [link source]
   (reduce-kv (fn [m k linkref]
                (if (map? linkref)
-                 (assoc m k (resolve-evaluations linkref state))
-                 (assoc m k (get-in state [:blueprint/evaluations linkref]))))
+                 (assoc m k (resolve-link linkref source))
+                 (assoc m k (get-in source (if (vector? linkref)
+                                             linkref
+                                             [linkref])))))
              {}
              link))
 
-(defmethod parser-read :evaluations/link
+(defmethod parser-read :link/ui-state
   [{:keys [state query parser data] :as env} key _]
-  (let [link (get data key)
-        st @state]
-    {:value (resolve-evaluations link @state)}))
+  (let [link (get data key)]
+    {:value (resolve-link link (:blueprint/ui-state @state))}))
+
+(defmethod parser-read :link/evaluations
+  [{:keys [state query parser data] :as env} key _]
+  (let [link (get data key)]
+    {:value (resolve-link link (:blueprint/evaluations @state))}))
+
+(defmethod parser-read :ui-state/shared
+  [{:keys [state query parser data] :as env} key _]
+  {:value (get-in @state [:blueprint/ui-state (:component/id data)])})
 
 (defmethod parser-read :row/items
   [{:keys [state query parser data] :as env} key _]
@@ -40,10 +45,8 @@
              (map (partial get-in st))
              ;; parse
              (map (fn [{:keys [component/type] :as c}]
-                    (let [type-ns (keyword (namespace type))
-                          ;; todo: less weird
-                          focused-query (if (map? query)
-                                          (get query type-ns [:component/id :component/type])
+                    (let [focused-query (if (map? query)
+                                          (get query type [:component/id :component/type])
                                           query)]
                       (doparse parser env focused-query c))))
              (into []))]
@@ -72,9 +75,19 @@
    :warnings []
    :state :success})
 
+(defn add-segments [job-env task segments]
+  (reduce (fn [je seg]
+            (onyx.api/new-segment je task seg))
+          job-env
+          segments))
+
 (defmethod parser-mutate 'onyx/init
-  [{:keys [state] :as env} key {:keys [id job]}]
-  (let [job-env (onyx.api/init job)]
+  [{:keys [state] :as env} key {:keys [id job input-segments]}]
+  (let [job-env (if (seq input-segments)
+                  (add-segments (onyx.api/init job)
+                                (-> job :workflow ffirst)
+                                input-segments)
+                  (onyx.api/init job))]
     {:action (fn []
                (swap! state assoc-in
                       [:blueprint/evaluations id]
@@ -96,6 +109,20 @@
                     [:blueprint/evaluations id :result :value]
                     #(onyx.api/tick %)))})
 
+(defmethod parser-mutate 'onyx/next-batch
+  [{:keys [state] :as env} key {:keys [id]}]
+  {:action (fn []
+             (swap! state update-in
+                    [:blueprint/evaluations id :result :value]
+                    (fn [job-env]
+                      (loop [jenv job-env
+                             action (:next-action job-env)]
+                        (if (or (keyword-identical? :lifecycle/after-batch action)
+                                (onyx.api/drained? jenv))
+                          jenv
+                          (recur (onyx.api/tick jenv)
+                                 (:next-action jenv)))))))})
+
 (defmethod parser-mutate 'onyx/drain
   [{:keys [state] :as env} key {:keys [id]}]
   {:action (fn []
@@ -105,17 +132,9 @@
                          (onyx.api/drain)
                          (onyx.api/stop))))})
 
-(defmethod parser-mutate 'onyx/init+batch+drain
-  [{:keys [state] :as env} key {:keys [id job input-batch]}]
-  (let [input-task (-> job :workflow ffirst)
-        hydrated-env (reduce (fn [j seg]
-                               (onyx.api/new-segment j input-task seg))
-                             (onyx.api/init job)
-                             input-batch)
-        job-env (-> hydrated-env
-                    (onyx.api/drain)
-                    (onyx.api/stop))]
-    {:action (fn []
-               (swap! state assoc-in
-                      [:blueprint/evaluations id]
-                      (job-evaluation id job-env)))}))
+(defmethod parser-mutate 'ui-state/update
+  [{:keys [state] :as env} key {:keys [id params]}]
+  {:action (fn []
+             (swap! state update-in
+                    [:blueprint/ui-state id]
+                    #(merge % params)))})

@@ -1,6 +1,5 @@
 /resources/public/example/js/**
 /resources/public/tutorial/js/**
-!/resources/public/tutorial/js/tutorial.js
 figwheel_server.log
 pom.xml
 *jar
