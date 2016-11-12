@@ -35,16 +35,28 @@
                            :source-map-timestamp true
                            :preloads [devtools.preload]}}
 
+               {:id "showcase-min"
+                :source-paths ["src" "example_src"]
+
+                :compiler {:main example.showcase
+                           :optimizations :simple
+                           :asset-path "example/js/out"
+                           :output-to "resources/public/example/js/showcase.js"
+                           :output-dir "resources/public/example/js/outx"
+                           }}
+
                ;; the combined tutorial build with code-splitting
                {:id "tutorial-all"
-                :source-paths ["src" "tutorial_src"]
+                :source-paths ["src" "tutorial_src" "example_src"]
                 :compiler {:output-dir "resources/public/tutorial/js"
                            :optimizations :simple
                            :pretty-print false
-                           :modules {:common {:output-to "resources/public/tutorial/js/common.js"
+                           :modules {:showcase {:output-to "resources/public/example/js/showcase.js"
+                                                :entries #{"example.showcase"}}
+                                     :common {:output-to "resources/public/tutorial/js/common.js"
                                               :entries #{"onyx-tutorial.core"}}
                                      :workflow {:output-to "resources/public/tutorial/js/workflow.js"
-                                                :entries #{"onyx-tutorial.workflow-basics"}
+                                                :entries #{"onyx-tutorial.workflow"}
                                                 :depends-on #{:common}}}}}
 
                ;; the "workflow" topic
@@ -58,7 +70,19 @@
                            :output-to "resources/public/tutorial/js/workflow.js"
                            :output-dir "resources/public/tutorial/js/out"
                            :source-map-timestamp true
-                           :preloads [devtools.preload]}}]}
+                           :preloads [devtools.preload]}}
+
+               {:id "workflow-min"
+                :source-paths ["src" "tutorial_src"]
+
+                :figwheel {:open-urls ["http://localhost:3449/workflow.html"]}
+
+                :compiler {:main onyx-tutorial.workflow
+                           :optimizations :simple
+                           :asset-path "tutorial/js/out"
+                           :output-to "resources/public/tutorial/js/workflow.js"
+                           :output-dir "resources/public/tutorial/js/outx"
+                           }}]}
 
   :figwheel {:css-dirs ["resources/public/css"]}
 

@@ -13,3 +13,6 @@ pom.xml
 .repl
 .nrepl-port
 .cljs_rhino_repl/
+
+!/resources/public/example/js/showcase.js
+!/resources/public/tutorial/js/workflow.js
