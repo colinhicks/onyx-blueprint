@@ -14,11 +14,9 @@
       (keyword->attr-val id)))
 
 (defn component-css-classes [{:keys [component/type layout/hints]}]
-  (let [ns (namespace type)]
-    (str "col component"
-         " component-" ns
-         " component-" ns "-" (name type)
-         " " (:className hints))))
+  (str "col component"
+       " component-" (namespace type) "-" (name type)
+       (when (:className hints) " " (:className hints))))
 
 (defn label [{:keys [content/label]}]
   (when label

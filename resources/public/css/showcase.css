@@ -10,22 +10,6 @@
   margin-right: 1em;
 }
 
-.component .label {
-  text-decoration: underline;
-}
-
-p.component-html-element {
-  clear: both;
-}
-
-.component-editor .CodeMirror {
-  height: auto;
-}
-
-.component-graph {
-  width: 500px;
-}
-
 aside, blockquote {
   padding: 1em;
 }
@@ -38,10 +22,24 @@ blockquote {
   background-color: #eee;
 }
 
-.component-auditor .valid-mark::before {
+/* component defaults  */
+.component .label {
+  text-decoration: underline;
+}
+
+.component-blueprint-editor .CodeMirror {
+  height: auto;
+}
+
+.component-blueprint-graph {
+  /* In some cases vis.js can't reasonably guess container dimensions. */
+  width: 500px;
+}
+
+.component-blueprint-auditor .valid-mark::before {
   content: "✗"
 }
 
-.component-auditor.valid .valid-mark::before {
+.component-blueprint-auditor.valid .valid-mark::before {
   content: "✓"
 }

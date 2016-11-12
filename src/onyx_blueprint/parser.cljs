@@ -47,10 +47,8 @@
              (map (partial get-in st))
              ;; parse
              (map (fn [{:keys [component/type] :as c}]
-                    (let [type-ns (keyword (namespace type))
-                          ;; todo: less weird
-                          focused-query (if (map? query)
-                                          (get query type-ns [:component/id :component/type])
+                    (let [focused-query (if (map? query)
+                                          (get query type [:component/id :component/type])
                                           query)]
                       (doparse parser env focused-query c))))
              (into []))]

@@ -44,6 +44,11 @@
 
 (def auditor (om/factory Auditor))
 
+(defmethod extensions/component-ui :blueprint/auditor
+  [props]
+  (auditor props))
+
+;; deprecated
 (defmethod extensions/component-ui :auditor/default
   [props]
   (auditor props))

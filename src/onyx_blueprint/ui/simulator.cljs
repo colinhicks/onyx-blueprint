@@ -91,6 +91,11 @@
 
 (def simulator (om/factory Simulator))
 
+(defmethod extensions/component-ui :blueprint/simulator
+  [props]
+  (simulator props))
+
+;; deprecated
 (defmethod extensions/component-ui :simulator/default
   [props]
   (simulator props))

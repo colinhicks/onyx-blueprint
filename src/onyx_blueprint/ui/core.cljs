@@ -19,12 +19,12 @@
 
     static om/IQuery
     (query [this]
-      (merge {:html (om/get-query Html)
-              :graph (om/get-query Graph)
-              :editor (om/get-query CodeEditor)
-              :simulator (om/get-query Simulator)
-              :job-inspector (om/get-query JobInspector)
-              :auditor (om/get-query Auditor)}
+      (merge {:blueprint/html (om/get-query Html)
+              :blueprint/graph (om/get-query Graph)
+              :blueprint/editor (om/get-query CodeEditor)
+              :blueprint/simulator (om/get-query Simulator)
+              :blueprint/job-inspector (om/get-query JobInspector)
+              :blueprint/auditor (om/get-query Auditor)}
              extensions/*custom-component-queries*))
 
     Object

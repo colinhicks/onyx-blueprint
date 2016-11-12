@@ -118,5 +118,9 @@
 
 (def graph (om/factory Graph))
 
+(defmethod extensions/component-ui :blueprint/graph [props]
+  (graph props))
+
+;; deprecated
 (defmethod extensions/component-ui :graph/workflow [props]
   (graph props))
