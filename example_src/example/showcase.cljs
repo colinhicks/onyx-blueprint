@@ -72,7 +72,9 @@
     :component/type :editor/data-structure
     :evaluations/validate-spec :onyx.core/workflow
     :evaluations/init :content/default-input
-    :content/default-input [[:a :b] [:b :c]]}
+    :content/default-input [[:read-input :increment-n]
+                            [:increment-n :square-n]
+                            [:square-n :write-output]]}
    
    {:component/id ::user-code-evaluations
     :component/type :html/hiccup
@@ -93,9 +95,9 @@
     :evaluations/init :content/default-input
     :content/read-only? true
     :content/default-input ";; Code editor input is evaluated in the cljs.user namespace.
-;; Because it's marked for export, this fn is available to JavaScript as cljs.user.foo()).\n
-(defn ^:export foo []
-  (println \"foo\"))"}
+;; Because they are marked for export, these functions are available to JavaScript.\n
+(defn ^:export increment-n [segment]\n  (update-in segment [:n] inc))
+(defn ^:export square-n [segment]\n  (update-in segment [:n] (partial * (:n segment))))"}
    
    {:component/id ::graph-subhead
     :component/type :html/element
@@ -109,7 +111,7 @@
 
    {:component/id ::graph-ex
     :component/type :graph/workflow
-    :evaluations/link {:workflow ::user-code-ex}}
+    :link/evaluations {:workflow ::user-code-ex}}
 
    {:component/id ::simulator-subhead
     :component/type :html/element
@@ -117,13 +119,75 @@
     :content/text "Job simulator"}
 
    {:component/id ::simulator-intro
+    :component/type :html/hiccup
+    :content/hiccup
+    [:div
+     [:p "Simulate the execution of a job with the simulator component. The simulator leverages "
+      [:a {:href "https://github.com/onyx-platform/onyx-local-rt"} "onyx-local-rt"]
+      " and empowers the user with command over the job execution lifecycle."]
+     [:p "Use the " [:code ":link/evaluations"] " property to aggregate a job's configuration from other components. The " [:code ":content/controls"] " property specifies controls available to the user."]]}
+   
+   {:component/id ::simulator
+    :component/type :simulator/default
+    :content/label "Job controls"
+    :content/controls [:initialize :next-tick :next-batch :run-to-completion]
+    :link/evaluations {:job-env ::simulator
+                       :workflow ::user-code-ex
+                       :catalog ::simulator-catalog
+                       :input-segments ::simulator-input-segments}}
+
+   {:component/id ::simulator-catalog
+    :component/type :editor/data-structure
+    :evaluations/init :content/default-input
+    :evaluations/validate-spec :onyx.core/catalog
+    :content/label "Catalog"
+    :content/default-input [{:onyx/name :read-input
+                             :onyx/type :input
+                             :onyx/batch-size 1}
+                            {:onyx/name :increment-n
+                             :onyx/type :function
+                             :onyx/fn :cljs.user/increment-n
+                             :onyx/batch-size 1}
+                            {:onyx/name :square-n
+                             :onyx/type :function
+                             :onyx/fn :cljs.user/square-n
+                             :onyx/batch-size 1}
+                            {:onyx/name :write-output
+                             :onyx/type :output
+                             :onyx/batch-size 1}]}
+
+   {:component/id ::simulator-input-segments
+    :component/type :editor/data-structure
+    :evaluations/init :content/default-input
+    :content/label "Input segments"
+    :content/default-input [{:n 0}
+                            {:n 1}
+                            {:n 2}
+                            {:n 3}
+                            {:n 4}
+                            {:n 5}
+                            {:n 6}
+                            {:n 7}
+                            {:n 8}
+                            {:n 9}]}
+
+   {:component/id ::inspector-subhead
     :component/type :html/element
-    :content/tag :p
-    :content/text ["Simulate the execution of a job with the simulator component. Uses onyx-local-rt."
-                   "Further description to come."]}
+    :content/tag :h2
+    :content/text "Job inspector"}
 
-   ;; todo simulator ex
+   {:component/id ::inspector-intro
+    :component/type :html/hiccup
+    :content/hiccup
+    [:div
+     [:p "Given a linked graph and simulator, the inspector displays the running job environment summary corresponding to the task selected on the linked graph."]]}
 
+   {:component/id ::inspector
+    :component/type :job-inspector/default
+    :content/label "Task status"
+    :link/evaluations {:job-env ::simulator}
+    :link/ui-state {:graph ::graph-ex}}
+   
    {:component/id ::validation-subhead
     :component/type :html/element
     :content/tag :h2
@@ -132,16 +196,20 @@
    {:component/id ::validation-intro
     :component/type :html/element
     :content/tag :p
-    :content/text ["Display compiler errors and spec validation explanations for the linked code editor using the validation component."
-                   "Further description to come."]}
+    :content/text ["Display compiler errors and spec validation explanations for the linked components using the auditor component."]}
+
+   {:component/id ::validation
+    :component/type :auditor/default
+    :content/label "Code analysis"
+    :link/evaluations {:workflow ::user-code-ex}}
    ])
    
 (def sections
-  [{:section/id ::top
+  [{:section/id ::top-section
     :section/layout [[::title]
                      [::leadin]]}
 
-   {:section/id ::text
+   {:section/id ::text-section
     :section/layout [[::text-subhead]
                      [::text-intro]
                      [::aengelberg-quote]
@@ -149,7 +217,7 @@
                      [::text-string-multiple]
                      [::text-hiccup]]}
 
-   {:section/id ::user-code
+   {:section/id ::user-code-section
     :section/layout [[::user-code-subhead]
                      [::user-code-intro]
                      [::user-code-ex]
@@ -157,18 +225,25 @@
                      [::user-code-read-only]
                      [::user-code-ex-read-only]]}
    
-   {:section/id ::graph
+   {:section/id ::graph-section
     :section/layout [[::graph-subhead]
                      [::graph-intro]
-                     [::graph-ex]]}
+                     '[(::graph-ex {:graph-direction "LR"})]]}
 
-   {:section/id ::simulator
+   {:section/id ::simulator-section
     :section/layout [[::simulator-subhead]
-                     [::simulator-intro]]}
+                     [::simulator-intro]
+                     [::simulator]]}
+
+   {:section/id ::inspector-section
+    :section/layout [[::inspector-subhead]
+                     [::inspector-intro]
+                     [::inspector]]}
    
-   {:section/id ::validation
+   {:section/id ::validation-section
     :section/layout [[::validation-subhead]
-                     [::validation-intro]]}
+                     [::validation-intro]
+                     [::validation]]}
    ])
 
 (api/render-tutorial! components sections (gdom/getElement "app"))

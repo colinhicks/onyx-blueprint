@@ -32,7 +32,7 @@
                              (cond
                                explain
                                (dom/li #js {:className "validation-failure"}
-                                       "Failure validating " (dom/code nil (name k)) ":"
+                                       "Failure validating " (dom/code nil (name k)) ": "
                                        (dom/span #js {:className "message"} explain))
 
                                error

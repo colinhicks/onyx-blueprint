@@ -21,3 +21,8 @@ p.component-html-element {
 .component-editor .CodeMirror {
   height: auto;
 }
+
+.component-graph {
+  /* in some cases, vis.js can't reasonably guess dimensions */
+  width: 500px;
+}
