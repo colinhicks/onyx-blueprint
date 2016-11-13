@@ -98,10 +98,14 @@ aside.col {
   width: 100%;
   position: fixed;
   border-top: 2px solid #fff;
-  outline: 1px solid #eee;
+  outline: 1px solid #ddd;
   bottom: 0;
   left: 0;
   z-index: 2;
+}
+
+.component-blueprint-auditor ul {
+  margin-right: 1em;
 }
 
 .component-blueprint-auditor .label {

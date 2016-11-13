@@ -9,6 +9,7 @@
             [cljsjs.codemirror.mode.clojure]
             [goog.dom :as gdom]
             [goog.dom.classlist]
+            [goog.async.Debouncer]
             [om.dom :as dom]
             [om.next :as om :refer-macros [defui]]
             [onyx-blueprint.extensions :as extensions]
@@ -54,15 +55,17 @@
             codemirror-opts (if read-only?
                               (assoc codemirror-opts :readOnly true)
                               codemirror-opts)
-            cm (editor (textarea-id id) codemirror-opts)]
-        ;; todo debounce
-        (.on cm "change"
-             (fn []
-               (om/transact! this `[(evaluations/evaluate {:type :onyx/fn
-                                                           :source ~(.getValue cm)
-                                                           :component-id ~id
-                                                           :script-id "user-input"})
-                                    :blueprint/sections])))))
+            cm (editor (textarea-id id) codemirror-opts)
+            ch-ch-change (js/goog.async.Debouncer.
+                          (fn [_]
+                            (om/transact! this `[(evaluations/evaluate {:type :onyx/fn
+                                                                        :source ~(.getValue cm)
+                                                                        :component-id ~id
+                                                                        :script-id "user-input"})
+                                                 :blueprint/sections]))
+                          1000)]
+
+        (.on cm "change" (fn [] (.fire ch-ch-change)))))
 
     (render [this]
       (let [{:keys [component/id content/default-input] :as props} (om/props this)]

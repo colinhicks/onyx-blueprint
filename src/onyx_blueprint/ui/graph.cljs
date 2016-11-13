@@ -21,7 +21,8 @@
               :interaction {:zoomView false
                             :dragView false
                             :dragNodes false
-                            :selectable graph-selectable}}]
+                            :selectable graph-selectable
+                            :multiselect graph-selectable}}]
     (clj->js opts)))
 
 (defn vis-data [workflow]
