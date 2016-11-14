@@ -22,7 +22,8 @@
     :component/type :blueprint/graph
     :ui-state/initial {:action :select-tasks
                        :tasks [:read-input :write-output]}
-    :link/evaluations {:workflow ::graph-data}}
+    :link/evaluations {:workflow ::graph-data
+                       :job-env ::in-action-simulator}}
 
    ;; not displayed must match :pre above
    {:component/id ::graph-data
