@@ -1,12 +1,10 @@
 (ns onyx-blueprint.ui.graph
-  (:require [cljs.pprint :as pprint]
-            [goog.dom :as gdom]
-            [monet.canvas :as canvas]
+  (:require [goog.dom :as gdom]
             [om.dom :as dom]
             [om.next :as om :refer-macros [defui]]
             [onyx-blueprint.extensions :as extensions]
             [onyx-blueprint.ui.helpers :as helpers]
-            [onyx-local-rt.api :as onyx.api]
+            [onyx-blueprint.ui.graph.segviz :as segviz]
             [cljsjs.vis]))
 
 
@@ -66,36 +64,23 @@
                      (map name)
                      (clj->js))
                 false))
- 
+
 (defmethod transition! :update-workflow
   [component graph params]
   (.setData graph (vis-data (:workflow params))))
 
-(defmethod transition! :canvas-did-redraw
-  [component graph {:keys [canvas-context]}]
-  (om/update-state! component assoc :canvas-context canvas-context))
-
-(defn segviz! [component]
-  (if-let [segviz (om/get-state component :segviz)]
-    segviz
-    (let [graph-canvas-context (om/get-state component :canvas-context)
-          _ (assert graph-canvas-context "Canvas context must be added to state after graph draws.")
-          graph-canvas (.-canvas graph-canvas-context)
-          segviz-canvas (doto (js/document.createElement "canvas")
-                          (gdom/setProperties #js {:width (.-clientWidth graph-canvas)
-                                                   :height (.-clientHeight graph-canvas)}))
-          _ (js/console.log "svc" segviz-canvas)
-          segviz (canvas/init segviz-canvas)]
-      (om/update-state! component :segviz segviz)
-      segviz))
-)
-
 (defmethod transition! :update-segment-visualization
   [component graph {:keys [job-env]}]
-  (let [env-summary (onyx.api/env-summary job-env)
-        segviz (segviz! component)]
-    (js/console.log "---" segviz))
-  )
+  (if-let [segviz (om/get-state component :segviz)]
+    (segviz/sync-job-env! segviz job-env)
+    (when (segviz/can-render? job-env)
+      (let [segviz (segviz/create! job-env graph)]
+        (om/update-state! component assoc :segviz segviz)))))
+
+(defmethod transition! :canvas-did-redraw
+  [component graph _]
+  (when-let [segviz (om/get-state component :segviz)]
+    (segviz/sync-graph! segviz graph)))
 
 (defn target-tasks [vis-evt]
   (into [] (map keyword (.-nodes vis-evt))))
@@ -137,10 +122,9 @@
                                   :blueprint/sections])))
 
       (.on graph
-           "afterDrawing"
-           (fn [canvas-context]
-             (transition! this graph {:action :canvas-did-redraw
-                                      :canvas-context canvas-context})))
+           "initRedraw"
+           (fn [_]
+             (transition! this graph {:action :canvas-did-redraw})))
 
       (when shared-state-on-mount?
         (transition! this graph shared))

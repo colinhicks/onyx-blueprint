@@ -11,7 +11,9 @@
                  [cljsjs/codemirror "5.19.0-0"]
                  [cljsjs/vis "4.16.1-0"]
                  [rm-hull/monet "0.3.0"]
-                 [sablono "0.7.5"]]
+                 [sablono "0.7.5"]
+                 [tween-clj "0.6.0-SNAPSHOT"]
+                 [colinhicks/hexpacker-stitch-lite "0.1.0-SNAPSHOT"]]
 
   :plugins [[lein-figwheel "0.5.8"]
             [lein-cljsbuild "1.1.4" :exclusions [[org.clojure/clojure]]]]

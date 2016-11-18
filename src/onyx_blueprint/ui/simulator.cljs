@@ -34,6 +34,17 @@
      :content/controls :link/evaluations :layout/hints])
   
   Object
+  ;;; TEMPORARY
+  (componentDidMount [this]
+    (let [{:keys [component/id content/controls link/evaluations] :as props} (om/props this)]
+      (js/window.setTimeout
+       (fn [] (om/transact! this
+                            `[(onyx/init {:id ~id
+                                          :job ~(init-data evaluations)
+                                          :input-segments ~(input-segments evaluations)})
+                              :blueprint/sections]))
+       500)))
+  
   (render [this]
     (let [{:keys [component/id content/controls link/evaluations] :as props} (om/props this)
           ^boolean initialized? (:job-env evaluations)]

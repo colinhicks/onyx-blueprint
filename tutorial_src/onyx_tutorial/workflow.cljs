@@ -70,12 +70,13 @@
    {:component/id ::in-action-simulator
     :component/type :blueprint/simulator
     :content/label "Job controls"
-    :content/controls [:initialize :run-to-completion]
+    :content/controls [:initialize :next-batch :run-to-completion]
     :link/evaluations {:workflow ::graph-data
                        :catalog ::in-action-catalog
                        :job-env ::in-action-simulator
                        :user-fn ::in-action-fns
-                       :input-segments ::in-action-input-segments}}
+                       :input-segments ::in-action-input-segments}
+    :simulator/checkpoints? true}
 
    {:component/id ::in-action-inspector
     :component/type :blueprint/job-inspector
@@ -102,7 +103,7 @@
     :evaluations/init :content/default-input
     :content/default-input [{:onyx/name :read-input
                              :onyx/type :input
-                             :onyx/batch-size 1}
+                             :onyx/batch-size 2}
                             {:onyx/name :increment-n
                              :onyx/type :function
                              :onyx/fn :cljs.user/increment-n

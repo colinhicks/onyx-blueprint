@@ -92,6 +92,12 @@ aside.col {
   height: 100%;
 }
 
+.component-blueprint-graph .segviz {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
 .component-blueprint-auditor.fixed-bottom {
   background-color: #eee;
   padding: 0.5em 1em;
