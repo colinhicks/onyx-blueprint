@@ -102,21 +102,21 @@
 (defn dot-init-val [state id batch-unit]
   (dot-val :source @state id batch-unit))
 
-(defn dot-update-fn [state id batch-unit done-cb]
+(defn dot-update-fn [state id batch-unit]
   (fn [val elapsed]
-    (let [{:keys [adding removing] :as st} @state
+    (let [{:keys [phases] :as st} @state
+          {:keys [phase-name offset done-cb]} (get phases id)
           source-dot (dot-val :source st id batch-unit)
           dest-dot (dot-val :dest st id batch-unit)]
-      
-      #_(cond
-        (adding batch-unit)
-        (js/console.log "adding" id)
-        
-        (removing batch-unit)
-        (js/console.log "removing" id))
 
-      source-dot
-      )))
+      (case phase-name
+        :adding
+        val ;todo
+        
+        :removing
+        val ;todo
+        
+        val))))
 
 (defn dot-draw [ctx val]
   (-> ctx
@@ -124,40 +124,53 @@
       (canvas/circle val)
       (canvas/fill)))
 
-;; todo transition between phases
+(defn phase-fn [name units cb]
+  (fn [state]
+    (swap! state assoc :phases
+           (loop [xs units
+                  i 0
+                  acc {}]
+             (let [x (first xs)
+                   id (:id (meta x))]
+               (if-let [nxs (seq (rest xs))]
+                 (recur nxs (inc i) (assoc acc id {:phase-name name :offset i}))
+                 (assoc acc id {:phase-name name :offset i :done-cb cb})))))))
 
 (defn render-next-batch! [{:keys [state] :as segviz}]
   (let [{:keys [queue rendering]} @state]
     (when-let [next-batch (peek queue)]
+      (swap! state update :queue pop)
+      (swap! state assoc :lock-rendering? true)
       (let [adding (set/difference next-batch rendering)
-            removing (set/difference rendering next-batch)]
-        (swap! state update :queue pop)
-        (swap! state update :rendering into next-batch)
-        (swap! state assoc
-               :adding adding
-               :removing removing)
-        (recoordinate! segviz)
-        
-        (js/console.log "adding" adding)
-        (js/console.log "removing" removing)
-        
-        ;; temporary
-        ;;(canvas/clear! segviz)
-        
-        
-        
-        (loop [xs next-batch
-               i 0
-               done-cb (fn next! [] (render-next-batch! segviz))]
-          (when-let [x (first xs)]
-            (let [id (:id (meta x))]
-              (canvas/add-entity segviz id
-                                 (canvas/entity (dot-init-val state id x)
-                                                (dot-update-fn state id x done-cb)
-                                                dot-draw))
-              (recur (rest xs)
-                     (inc i)
-                     identity))))))))
+            removing (set/difference rendering next-batch)
+            adding-phase!
+            (phase-fn :adding adding
+                      (fn post-adding-phase []
+                        (swap! state assoc :lock-rendering? false)
+                        (render-next-batch! segviz)))
+            removing-phase!
+            (phase-fn :removing removing
+                      (fn post-removing-phase []
+                        ;; -canvas removing
+                        (->> removing
+                             (map #(:id (meta %)))
+                             (run! #(canvas/remove-entity segviz %)))
+                        ;; update rendering set
+                        (swap! state update :rendering
+                               #(into (apply disj % removing) adding))
+                        ;; recalculate coordinates
+                        (recoordinate! segviz)
+                        ;; +canvas adding
+                        (run! (fn [unit]
+                                (let [id (:id (meta unit))]
+                                  (canvas/add-entity segviz id
+                                                     (canvas/entity (dot-init-val state id unit)
+                                                                    (dot-update-fn state id unit)
+                                                                    dot-draw))))
+                              adding)
+                        ;; enter adding transition
+                        (adding-phase! state)))]
+        (removing-phase! state)))))
 
 (defn graph-scene [graph]
   (let [view-scale (.getScale graph)
@@ -184,7 +197,8 @@
 
 (defn sync-job-env! [segviz job-env]
   (enqueue-batches! segviz job-env)
-  (render-next-batch! segviz))
+  (when-not (:lock-rendering? segviz)
+    (render-next-batch! segviz)))
 
 (defn create! [job-env graph]
   (let [graph-canvas (.. graph -canvas -frame -canvas)
@@ -196,9 +210,9 @@
         segviz (-> (canvas/init segviz-canvas)
                    (assoc :state (atom {:last-checkpoint-timestamp 0
                                         :rendering #{}
-                                        :adding #{}
-                                        :removing #{}
+                                        :phases {}
                                         :coordinates {}
+                                        :lock-rendering? false
                                         :queue cljs.core/PersistentQueue.EMPTY
                                         :graph-scene (graph-scene graph)})))]
     ;;(js/console.log "init-env" job-env)
