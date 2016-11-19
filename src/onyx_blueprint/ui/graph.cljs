@@ -83,7 +83,7 @@
     (segviz/sync-graph! segviz graph)))
 
 (defn target-tasks [vis-evt]
-  (into [] (map keyword (.-nodes vis-evt))))
+  (into [] (map keyword) (.-nodes vis-evt)))
 
 (defn graph-id [props]
   (str (helpers/component-id props)
