@@ -126,15 +126,18 @@
 
 (defn phase-fn [name units cb]
   (fn [state]
-    (swap! state assoc :phases
-           (loop [xs units
-                  i 0
-                  acc {}]
-             (let [x (first xs)
-                   id (:id (meta x))]
-               (if-let [nxs (seq (rest xs))]
-                 (recur nxs (inc i) (assoc acc id {:phase-name name :offset i}))
-                 (assoc acc id {:phase-name name :offset i :done-cb cb})))))))
+    (if-not (seq units)
+      (do (swap! state assoc :phases {})
+          (cb))
+      (swap! state assoc :phases
+             (loop [xs units
+                    i 0
+                    acc {}]
+               (let [x (first xs)
+                     id (:id (meta x))]
+                 (if-let [nxs (seq (rest xs))]
+                   (recur nxs (inc i) (assoc acc id {:phase-name name :offset i :done-cb identity}))
+                   (assoc acc id {:phase-name name :offset i :done-cb cb}))))))))
 
 (defn render-next-batch! [{:keys [state] :as segviz}]
   (let [{:keys [queue rendering]} @state]
@@ -145,31 +148,33 @@
             removing (set/difference rendering next-batch)
             adding-phase!
             (phase-fn :adding adding
-                      (fn post-adding-phase []
+                      (fn after-adding-phase! []
                         (swap! state assoc :lock-rendering? false)
                         (render-next-batch! segviz)))
-            removing-phase!
-            (phase-fn :removing removing
-                      (fn post-removing-phase []
-                        ;; -canvas removing
-                        (->> removing
-                             (map #(:id (meta %)))
-                             (run! #(canvas/remove-entity segviz %)))
-                        ;; update rendering set
-                        (swap! state update :rendering
-                               #(into (apply disj % removing) adding))
-                        ;; recalculate coordinates
-                        (recoordinate! segviz)
-                        ;; +canvas adding
-                        (run! (fn [unit]
-                                (let [id (:id (meta unit))]
-                                  (canvas/add-entity segviz id
-                                                     (canvas/entity (dot-init-val state id unit)
-                                                                    (dot-update-fn state id unit)
-                                                                    dot-draw))))
-                              adding)
-                        ;; enter adding transition
-                        (adding-phase! state)))]
+
+            after-removing-phase!
+            (fn []
+              ;; -canvas removing
+              (->> removing
+                   (map #(:id (meta %)))
+                   (run! #(canvas/remove-entity segviz %)))
+              ;; update rendering set
+              (swap! state update :rendering
+                     #(into (apply disj % removing) adding))
+              ;; recalculate coordinates
+              (recoordinate! segviz)
+              ;; +canvas adding
+              (run! (fn [unit]
+                      (let [id (:id (meta unit))]
+                        (canvas/add-entity segviz id
+                                           (canvas/entity (dot-init-val state id unit)
+                                                          (dot-update-fn state id unit)
+                                                          dot-draw))))
+                    adding)
+              ;; enter adding transition
+              (adding-phase! state))
+            
+            removing-phase! (phase-fn :removing removing after-removing-phase!)]
         (removing-phase! state)))))
 
 (defn graph-scene [graph]
