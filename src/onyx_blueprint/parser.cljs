@@ -96,7 +96,9 @@
         input-segments? (seq input-segments)
         job-env (cond-> (onyx.api/init job)
                   checkpoints?
-                  (as-> x (assoc x :checkpoints [(stamped-summary x)]))
+                  (as-> x (assoc x
+                                 :uuid (random-uuid)
+                                 :checkpoints [(stamped-summary x)]))
                   
                   input-segments?
                   (as-> x (add-segments x (-> x :sorted-tasks first) input-segments))

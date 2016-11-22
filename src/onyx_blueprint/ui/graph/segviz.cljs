@@ -1,5 +1,6 @@
 (ns onyx-blueprint.ui.graph.segviz
   (:require [clojure.set :as set]
+            [clojure.string :as str]
             [goog.dom :as gdom]
             [monet.canvas :as canvas]
             [tween-clj.core :as tween]
@@ -94,13 +95,37 @@
 (defn dot-val [targetk
                {:keys [rendering graph-scene coordinates]}
                id
-               {:keys [source dest]}]
+               unit]
   (let [{:keys [dx dy r]} (get-in coordinates [id targetk])
-        {:keys [x y]} (get-in graph-scene [:tasks source])]
-    {:x (+ x dx) :y (+ y dy) :r r}))
+        {:keys [x y]} (get-in graph-scene [:tasks (get unit targetk)])]
+    {:x (+ x dx)
+     :y (+ y dy)
+     :r r
+     :red 255
+     :green 100
+     :blue 100
+     :alpha 1}))
 
 (defn dot-init-val [state id batch-unit]
-  (dot-val :source @state id batch-unit))
+  (assoc (dot-val :source @state id batch-unit)
+         :alpha 1))
+
+(defn animate! [val label props easingf duration donef]
+  (let [now (js/performance.now)
+        start (or (-> val meta :anim-start label)
+                  now)
+        elapsed (- now start)
+        end (+ start duration)]
+    (if-not (pos? (- duration elapsed))
+      (do (donef) val)
+      (let [p (easingf (tween/range-to-p start end (+ start elapsed)))]
+        (reduce-kv (fn [val' k [startv endv]]
+                     (assoc val' k (+ startv (* p (- endv startv)))))
+                   (vary-meta val assoc-in [:anim-start label] start)
+                   props)))))
+
+(def ease-out-elastic
+  (partial tween/ease-out tween/transition-elastic))
 
 (defn dot-update-fn [state id batch-unit]
   (fn [val elapsed]
@@ -108,24 +133,36 @@
           {:keys [phase-name offset done-cb]} (get phases id)
           source-dot (dot-val :source st id batch-unit)
           dest-dot (dot-val :dest st id batch-unit)]
-
+      ;;(js/console.log source-dot dest-dot)
       (case phase-name
         :adding
-        val ;todo
+        (animate! val :adding
+                  {:r [0 (:r source-dot)]
+                   :y [(+ (:y source-dot) (* 0.075 (:y source-dot)))
+                       (:y source-dot)]}
+                  ease-out-elastic
+                  1500
+                  done-cb)
         
         :removing
-        val ;todo
+        (animate! val :removing
+                  {:x [(:x source-dot) (:x dest-dot)]
+                   :y [(:y source-dot) (:y dest-dot)]}
+                  ease-out-elastic
+                  2000
+                  done-cb)
         
         val))))
 
-(defn dot-draw [ctx val]
+(defn dot-draw [ctx {:keys [red green blue alpha] :as val}]
   (-> ctx
-      (canvas/fill-style "rgba(100,150,255,0.5)")
+      (canvas/fill-style (str "rgba(" (str/join "," [red green blue alpha]) ")"))
       (canvas/circle val)
       (canvas/fill)))
 
 (defn phase-fn [name units cb]
   (fn [state]
+    (println name)
     (if-not (seq units)
       (do (swap! state assoc :phases {})
           (cb))
@@ -149,18 +186,23 @@
             adding-phase!
             (phase-fn :adding adding
                       (fn after-adding-phase! []
-                        (swap! state assoc :lock-rendering? false)
+                        (println "after-adding")
+                        (swap! state assoc
+                               :lock-rendering? false
+                               :phases {})
                         (render-next-batch! segviz)))
 
             after-removing-phase!
             (fn []
-              ;; -canvas removing
-              (->> removing
-                   (map #(:id (meta %)))
-                   (run! #(canvas/remove-entity segviz %)))
+              (println "after-removing")
               ;; update rendering set
               (swap! state update :rendering
                      #(into (apply disj % removing) adding))
+              (swap! state assoc :phases {})
+              ;; -canvas removing
+              (->> removing
+                   (map #(:id (meta %)))
+                   (run! #(canvas/remove-entity segviz %)))            
               ;; recalculate coordinates
               (recoordinate! segviz)
               ;; +canvas adding
@@ -200,7 +242,18 @@
   ;;(js/console.log "updated-scene" (graph-scene graph))
   (swap! (:state segviz) assoc :graph-scene (graph-scene graph)))
 
-(defn sync-job-env! [segviz job-env]
+(def default-state
+  {:last-checkpoint-timestamp 0
+   :rendering #{}
+   :phases {}
+   :coordinates {}
+   :lock-rendering? false
+   :queue cljs.core/PersistentQueue.EMPTY})
+
+(defn sync-job-env! [{:keys [state] :as segviz} job-env]
+  (when (not= (:job-uuid @state) (:uuid job-env))
+    (canvas/clear! segviz)
+    (swap! state merge default-state))
   (enqueue-batches! segviz job-env)
   (when-not (:lock-rendering? segviz)
     (render-next-batch! segviz)))
@@ -213,13 +266,9 @@
                                                  :height (.-clientHeight graph-canvas)})
                         (gdom/insertSiblingBefore graph-canvas))
         segviz (-> (canvas/init segviz-canvas)
-                   (assoc :state (atom {:last-checkpoint-timestamp 0
-                                        :rendering #{}
-                                        :phases {}
-                                        :coordinates {}
-                                        :lock-rendering? false
-                                        :queue cljs.core/PersistentQueue.EMPTY
-                                        :graph-scene (graph-scene graph)})))]
+                   (assoc :state (atom (assoc default-state
+                                              :job-uuid (:uuid job-env)
+                                              :graph-scene (graph-scene graph)))))]
     ;;(js/console.log "init-env" job-env)
     ;;(js/console.log "graph" graph)
     ;;(js/console.log "scene" (:graph-scene @(:state segviz)))
