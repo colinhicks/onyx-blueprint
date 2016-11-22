@@ -44,8 +44,9 @@
                                        (batch-unit type source dest segments idx timestamp))
                                      (range)
                                      (partition-all batch-size inbox)))
-                              children))]
-             (into inbox-batches
+                              (or (seq children) [::leaf])))]
+             inbox-batches
+             #_(into inbox-batches
                    (map-indexed (fn [idx output]
                                   (batch-unit :output source nil [output] idx timestamp)))
                    outputs))))
@@ -64,10 +65,9 @@
     (swap! state update :queue into batches)))
 
 (defn coordinate [units targetk r1]  
-  (let [n (count units)
+  (let [n (max 2 (count units)) ; guarantee two-layer size
         nlayers (js/Math.ceil (inc (/ (dec n) 6)))
-        r2 (min (/ r1 2)
-                (/ r1 (dec (* 2 nlayers))))
+        r2 (/ r1 (dec (* 2 nlayers)))
         coords (stitch/pack-circle r1 r2 {:x 0 :y 0})]
     (map (fn [unit {:keys [x y]}]
            (assoc unit targetk {:r r2 :dx x :dy y}))
@@ -127,13 +127,15 @@
 (def ease-out-elastic
   (partial tween/ease-out tween/transition-elastic))
 
+(def ease-out-expo
+  (partial tween/ease-out tween/transition-expo))
+
 (defn dot-update-fn [state id batch-unit]
   (fn [val elapsed]
     (let [{:keys [phases] :as st} @state
           {:keys [phase-name offset done-cb]} (get phases id)
           source-dot (dot-val :source st id batch-unit)
           dest-dot (dot-val :dest st id batch-unit)]
-      ;;(js/console.log source-dot dest-dot)
       (case phase-name
         :adding
         (animate! val :adding
@@ -141,18 +143,18 @@
                    :y [(+ (:y source-dot) (* 0.075 (:y source-dot)))
                        (:y source-dot)]}
                   ease-out-elastic
-                  1500
+                  700
                   done-cb)
         
         :removing
         (animate! val :removing
                   {:x [(:x source-dot) (:x dest-dot)]
                    :y [(:y source-dot) (:y dest-dot)]}
-                  ease-out-elastic
-                  2000
+                  ease-out-expo
+                  1000
                   done-cb)
         
-        val))))
+        source-dot))))
 
 (defn dot-draw [ctx {:keys [red green blue alpha] :as val}]
   (-> ctx
@@ -162,7 +164,7 @@
 
 (defn phase-fn [name units cb]
   (fn [state]
-    (println name)
+    ;;(println name)
     (if-not (seq units)
       (do (swap! state assoc :phases {})
           (cb))
@@ -183,28 +185,32 @@
       (swap! state assoc :lock-rendering? true)
       (let [adding (set/difference next-batch rendering)
             removing (set/difference rendering next-batch)
-            adding-phase!
-            (phase-fn :adding adding
-                      (fn after-adding-phase! []
-                        (println "after-adding")
-                        (swap! state assoc
-                               :lock-rendering? false
-                               :phases {})
-                        (render-next-batch! segviz)))
+            _ (js/console.log adding removing)
+            after-adding-phase!
+            (fn []
+              ;;(console.log "after-adding" removing)
+              ;; -canvas removing
+              (->> removing
+                   (map #(:id (meta %)))
+                   (run! #(canvas/remove-entity segviz %)))
+              
+              (swap! state assoc
+                     :lock-rendering? false
+                     :phases {})
+              (render-next-batch! segviz))
+                    
 
             after-removing-phase!
             (fn []
-              (println "after-removing")
+              ;;(js/console.log "after-removing" removing adding)
               ;; update rendering set
               (swap! state update :rendering
                      #(into (apply disj % removing) adding))
               (swap! state assoc :phases {})
-              ;; -canvas removing
-              (->> removing
-                   (map #(:id (meta %)))
-                   (run! #(canvas/remove-entity segviz %)))            
+    
               ;; recalculate coordinates
               (recoordinate! segviz)
+              (js/console.log (:coordinates @state))
               ;; +canvas adding
               (run! (fn [unit]
                       (let [id (:id (meta unit))]
@@ -214,7 +220,18 @@
                                                           dot-draw))))
                     adding)
               ;; enter adding transition
-              (adding-phase! state))
+              (let [removing-groups (group-by :dest removing)
+                    adding-groups (group-by :source adding)
+                    _ (js/console.log "ag rg" adding-groups removing-groups)
+                    difference-groups (reduce-kv (fn [g k rmvs]
+                                                   (update g k #(drop (count rmvs) %)))
+                                                 adding-groups
+                                                 removing-groups)
+                    _ (js/console.log "dg" difference-groups)
+                    adding-phase! (phase-fn :adding
+                                            (mapcat second difference-groups)
+                                            after-adding-phase!)]
+                (adding-phase! state)))
             
             removing-phase! (phase-fn :removing removing after-removing-phase!)]
         (removing-phase! state)))))
