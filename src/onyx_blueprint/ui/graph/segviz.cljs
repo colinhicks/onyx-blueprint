@@ -35,21 +35,15 @@
         (mapcat
          (fn [[source {:keys [inbox outputs]}]]
            (let [{:keys [event children]} (get-in job-env [:tasks source])
-                 {:keys [onyx/batch-size onyx/type]} (-> event :onyx.core/task-map)
-                 inbox-batches
-                 (->> inbox
-                      (repeat)
-                      (mapcat (fn [dest inbox]
-                                (map (fn [idx segments]
-                                       (batch-unit type source dest segments idx timestamp))
-                                     (range)
-                                     (partition-all batch-size inbox)))
-                              (or (seq children) [::leaf])))]
-             inbox-batches
-             #_(into inbox-batches
-                   (map-indexed (fn [idx output]
-                                  (batch-unit :output source nil [output] idx timestamp)))
-                   outputs))))
+                 {:keys [onyx/batch-size onyx/type]} (-> event :onyx.core/task-map)]
+             (->> inbox
+                  (repeat)
+                  (mapcat (fn [dest inbox]
+                            (map (fn [idx segments]
+                                   (batch-unit type source dest segments idx timestamp))
+                                 (range)
+                                 (partition-all batch-size inbox)))
+                          (or (seq children) [::leaf]))))))
         tasks))
 
 (defn enqueue-batches! [{:keys [state] :as segviz} job-env]
@@ -78,8 +72,9 @@
   (->> units
        (group-by targetk)
        (mapcat (fn [[task g]]
-                 (coordinate g targetk
-                             (get-in graph-scene [:tasks task :r]))))))
+                 (if-let [target-radius (get-in graph-scene [:tasks task :r])]
+                   (coordinate g targetk target-radius)
+                   g)))))
 
 (defn recoordinate! [{:keys [state] :as segviz}]
   (let [{:keys [graph-scene rendering]} @state]
@@ -184,8 +179,8 @@
       (swap! state update :queue pop)
       (swap! state assoc :lock-rendering? true)
       (let [adding (set/difference next-batch rendering)
-            removing (set/difference rendering next-batch)
-            _ (js/console.log adding removing)
+            removing (remove #(keyword-identical? ::leaf (:dest %))
+                             (set/difference rendering next-batch))
             after-adding-phase!
             (fn []
               ;;(console.log "after-adding" removing)
@@ -198,8 +193,6 @@
                      :lock-rendering? false
                      :phases {})
               (render-next-batch! segviz))
-                    
-
             after-removing-phase!
             (fn []
               ;;(js/console.log "after-removing" removing adding)
@@ -207,10 +200,8 @@
               (swap! state update :rendering
                      #(into (apply disj % removing) adding))
               (swap! state assoc :phases {})
-    
               ;; recalculate coordinates
               (recoordinate! segviz)
-              (js/console.log (:coordinates @state))
               ;; +canvas adding
               (run! (fn [unit]
                       (let [id (:id (meta unit))]
@@ -222,12 +213,12 @@
               ;; enter adding transition
               (let [removing-groups (group-by :dest removing)
                     adding-groups (group-by :source adding)
-                    _ (js/console.log "ag rg" adding-groups removing-groups)
+                    ;;_ (js/console.log "ag rg" adding-groups removing-groups)
                     difference-groups (reduce-kv (fn [g k rmvs]
                                                    (update g k #(drop (count rmvs) %)))
                                                  adding-groups
                                                  removing-groups)
-                    _ (js/console.log "dg" difference-groups)
+                    ;;_ (js/console.log "dg" difference-groups)
                     adding-phase! (phase-fn :adding
                                             (mapcat second difference-groups)
                                             after-adding-phase!)]
