@@ -169,8 +169,10 @@
                     acc {}]
                (let [x (first xs)
                      id (:id (meta x))]
-                 (if-let [nxs (seq (rest xs))]
-                   (recur nxs (inc i) (assoc acc id {:phase-name name :offset i :done-cb identity}))
+                 (if-let [nexts (next xs)]
+                   (recur nexts
+                          (inc i)
+                          (assoc acc id {:phase-name name :offset i :done-cb identity}))
                    (assoc acc id {:phase-name name :offset i :done-cb cb}))))))))
 
 (defn render-next-batch! [{:keys [state] :as segviz}]
