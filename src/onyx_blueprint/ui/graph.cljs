@@ -13,7 +13,8 @@
   (let [{:keys [graph-direction graph-selectable]
          :or {graph-direction "UD"
               graph-selectable true}} (:layout/hints props)
-        opts {:nodes {:shape "dot"}
+        opts {:autoResize false
+              :nodes {:shape "dot"}
               :edges {:arrows "to"}
               :layout {:hierarchical {:enabled true
                                       :sortMethod "directed"
