@@ -19,7 +19,8 @@
 
 (defn batch-unit [type source dest segments idx timestamp]
   (let [id (keyword (str (name source)
-                         (when dest (str "-to-" (name dest)))
+                         "-to-"
+                         (name dest)
                          "-"
                          idx
                          "-"
@@ -263,7 +264,7 @@
 (defn sync-job-env! [{:keys [state] :as segviz} job-env]
   (when (not= (:job-uuid @state) (:uuid job-env))
     (canvas/clear! segviz)
-    (swap! state merge default-state))
+    (swap! state merge default-state {:job-uuid (:uuid job-env)}))
   (enqueue-batches! segviz job-env)
   (when-not (:lock-rendering? segviz)
     (render-next-batch! segviz)))
